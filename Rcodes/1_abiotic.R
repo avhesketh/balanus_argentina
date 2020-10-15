@@ -2,9 +2,12 @@
 
 
 ## First load packages of interest
-if (!require("tidyverse", character.only = TRUE)) {
-      install.packages("tidyverse", dependencies = TRUE)
-      library("tidyverse", character.only = TRUE)
+
+packages <- c("tidyverse")
+
+if (!require(packages, character.only = TRUE)) {
+      install.packages(packages, dependencies = TRUE)
+      library(packages, character.only = TRUE)
     }
 
 # define standard error function for eventual plotting
@@ -137,6 +140,10 @@ temp_time <- ggplot(aes(x = dss, y = adm, colour = Site, fill = Site), data = te
   ylab("Daily maximum temperature (˚C)") +
   xlab("Time until/since summer solstice (days)")
 
+ggsave("./figures/Figure_1a.tiff", plot = temp_time, 
+       width = 11, height = 5, units = "in",
+       dpi = 600)
+
 # summarize the average daily maximum temperature average through time
 adm_fig <- read_csv("./clean_data/temperature_clean.csv") %>% 
   # calculate maximum temp each day for each ibutton at each site
@@ -155,6 +162,7 @@ temp_site_summary <- read_csv("./clean_data/temperature_clean.csv") %>%
   rename(Site = site) %>% 
   full_join(adm_fig)
 
+# making and saving figures for 1) average daily maximum temperature
 adm_summary <- ggplot(aes(x = Site, y = adm, colour = Site), data = temp_site_summary) +
   geom_boxplot(width = 0.8, lwd = 1) +
   theme_classic() +
@@ -170,6 +178,11 @@ adm_summary <- ggplot(aes(x = Site, y = adm, colour = Site), data = temp_site_su
   ylab("Mean daily max temp. (˚C)") +
   xlab("Study site")
 
+ggsave("./figures/Figure_1b.tiff", plot = adm_summary, 
+       width = 5, height = 6, units = "in",
+       dpi = 600)
+
+# and a figure for upper 99th quantile of temperature
 nnq_summary <- ggplot(aes(x = Site, y = nnquant, colour = Site), data = temp_site_summary) +
   geom_boxplot(width = 0.8, lwd = 1) +
   theme_classic() +
@@ -184,3 +197,34 @@ nnq_summary <- ggplot(aes(x = Site, y = nnquant, colour = Site), data = temp_sit
   theme(legend.title = element_text(size = 24)) +
   ylab("Upper 99th quantile temp. (˚C)") +
   xlab("Study site")
+
+ggsave("./figures/Figure_1c.tiff", plot = nnq_summary, 
+       width = 5, height = 6, units = "in",
+       dpi = 600)
+
+#summarize humidity data
+
+hum <- read_csv("./clean_data/humidity_clean.csv") %>% 
+  group_by(site, month) %>% 
+  summarize(mean_hum = mean(humidity), se_hum = se(humidity)) %>% 
+  mutate(month = as.factor(month))
+
+hum_site <- ggplot(aes(x = site, y = mean_hum, color = site),
+                   data = hum) +
+  theme_classic() +
+  geom_boxplot(width = 0.8, lwd = 1) +
+  geom_jitter(width = 0.25) +
+  ylab("Mean relative humidity (%)") +
+  scale_color_manual(values = c("steelblue3", "indianred3")) +
+  theme(axis.text.x = element_text(size = 22)) +
+  theme(axis.text.y = element_text(size = 22)) +
+  theme(axis.title.x = element_text(size = 24)) +
+  theme(axis.title.y = element_text(size = 24)) +
+  theme(legend.text = element_text(size = 22)) +
+  theme(legend.title = element_text(size = 24)) +
+  theme(legend.position = "none") +
+  xlab("Study region")
+
+ggsave("./figures/Figure_1d.tiff", plot = hum_site, 
+       width = 5, height = 6, units = "in",
+       dpi = 600)
