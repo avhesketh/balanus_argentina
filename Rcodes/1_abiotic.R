@@ -140,9 +140,10 @@ temp_time <- ggplot(aes(x = dss, y = adm, colour = Site, fill = Site), data = te
   ylab("Daily maximum temperature (˚C)") +
   xlab("Time until/since summer solstice (days)")
 
-ggsave("./figures/Figure_1a.tiff", plot = temp_time, 
-       width = 11, height = 5, units = "in",
-       dpi = 600)
+# save files to figure folder
+#ggsave("./figures/Figure_1a.tiff", plot = temp_time, 
+      #width = 11, height = 5, units = "in",
+      #dpi = 600)
 
 # summarize the average daily maximum temperature average through time
 adm_fig <- read_csv("./clean_data/temperature_clean.csv") %>% 
@@ -178,9 +179,9 @@ adm_summary <- ggplot(aes(x = Site, y = adm, colour = Site), data = temp_site_su
   ylab("Mean daily max temp. (˚C)") +
   xlab("Study site")
 
-ggsave("./figures/Figure_1b.tiff", plot = adm_summary, 
-       width = 5, height = 6, units = "in",
-       dpi = 600)
+#ggsave("./figures/Figure_1b.tiff", plot = adm_summary, 
+      #width = 5, height = 6, units = "in",
+      #dpi = 600)
 
 # and a figure for upper 99th quantile of temperature
 nnq_summary <- ggplot(aes(x = Site, y = nnquant, colour = Site), data = temp_site_summary) +
@@ -198,9 +199,9 @@ nnq_summary <- ggplot(aes(x = Site, y = nnquant, colour = Site), data = temp_sit
   ylab("Upper 99th quantile temp. (˚C)") +
   xlab("Study site")
 
-ggsave("./figures/Figure_1c.tiff", plot = nnq_summary, 
-       width = 5, height = 6, units = "in",
-       dpi = 600)
+#ggsave("./figures/Figure_1c.tiff", plot = nnq_summary, 
+       #width = 5, height = 6, units = "in",
+       #dpi = 600)
 
 #summarize humidity data
 
@@ -225,6 +226,6 @@ hum_site <- ggplot(aes(x = site, y = mean_hum, color = site),
   theme(legend.position = "none") +
   xlab("Study region")
 
-ggsave("./figures/Figure_1d.tiff", plot = hum_site, 
-       width = 5, height = 6, units = "in",
-       dpi = 600)
+#ggsave("./figures/Figure_1d.tiff", plot = hum_site, 
+      #width = 5, height = 6, units = "in",
+      #dpi = 600)
