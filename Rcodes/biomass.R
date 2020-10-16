@@ -1,5 +1,6 @@
 # 2: analysis and visualization of herbivore abundance & biomass data
 
+# load packages required for script
 packages <- c("tidyverse", "glmmTMB","car", "dplyr", "DHARMa")
 
 for (i in 1:length(packages)){
@@ -10,8 +11,7 @@ if (!require(packages[i], character.only = TRUE)) {
 }
 
 # first, examine the herbivore count data
-herb_counts <- read_csv("./clean_data/herbivore_counts.csv") 
-
+herb_counts <- read_csv("./clean_data/herbivores.csv", index_col = FALSE) 
 # 1: Lottia spp. abundance model
 lottia <- herb_counts %>% 
   filter(species == "Lottia")
