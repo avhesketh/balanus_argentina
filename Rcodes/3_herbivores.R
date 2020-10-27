@@ -51,11 +51,11 @@ siph_dw <- function(len) {
 }
 
 # need to extract the data from existing figures
-lott_litt <- metaDigitise("./raw_data", summary = FALSE)
+#lott_litt <- metaDigitise("./raw_data", summary = FALSE)
 # littorine data from North 1954
-litt <- do.call(rbind, lott_litt$scatterplot[1]) %>% 
+#litt <- do.call(rbind, lott_litt$scatterplot[1]) %>% 
   # get length in terms of mm, not cm
-  mutate(x = x*10)
+  #mutate(x = x*10)
 
 litt_dw_sl <- lm(log(y) ~ log(x), data = litt)
 summary(litt_dw_sl)
@@ -65,9 +65,9 @@ litt_dw <- function(len) {
 }
 
 # lottia data from Frank 1965
-lott <- do.call(rbind, lott_litt$scatterplot[2]) %>% 
+#lott <- do.call(rbind, lott_litt$scatterplot[2]) %>% 
   # convert length to mm, convert volume to dry weight 
-  mutate(x = x*10, y = y*0.35)
+  #mutate(x = x*10, y = y*0.35)
 
 lott_dw_sl <- lm(log(y) ~ log(x), data = lott)
 summary(lott_dw_sl)
@@ -76,7 +76,6 @@ summary(lott_dw_sl)
 lottia_dw <- function(len) {
   log_dw <- 1.55329*log(len) - 6.51138
 }
-
 
 # now for biomass estimation
 set.seed(26)
@@ -113,21 +112,52 @@ herb_biomass <- herbivores %>%
 
 # Model 1: biomass between locations
 
-herb.bio <- glmmTMB(biomass ~ (location+barnacles+timediff)^3 +
+herb.bio.1 <- glmmTMB(biomass ~ (location+barnacles+timediff)^3 +
                         (1|block/location),
                    data = herb_biomass,
-                   family = tweedie)
+                   family = tweedie()
+                   )
 
 sim.res.1 <- simulateResiduals(herb.bio.1)
-testTemporalAutocorrelation(simulationOutput = sim.res.1)
+testTemporalAutocorrelation(simulationOutput = sim.res.1, time = unique(herb_biomass$timediff))
 # based on test of temporal autocorrelation, no additional term is needed
 plot(sim.res.1)
-# there is a bit of pattern in the residuals plots, but not very much
-# removing the block effect increases AIC, and generates more patterns in the residuals
-# leave the model as is!
+# need to continue tweaking the model - there are some dispersion issues with the residuals
 
-summary(herb.bio)
-Anova(herb.bio)
+plot(residuals(herb.bio.1) ~ as.factor(herb_biomass$barnacles)) # a lot of variation
+plot(residuals(herb.bio.1) ~ as.factor(herb_biomass$location)) # some variation here too
+plot(residuals(herb.bio.1) ~ (herb_biomass$timediff)) 
+
+herb.bio.2 <- glmmTMB(biomass ~ (location+barnacles+timediff)^3 +
+                      (1|block/location),
+                    data = herb_biomass,
+                    dispformula = ~barnacles,
+                    family = tweedie())
+
+sim.res.1a <- simulateResiduals(herb.bio.2)
+testTemporalAutocorrelation(simulationOutput = sim.res.1a, time = unique(herb_biomass$timediff))
+# based on test of temporal autocorrelation, no additional term is needed
+plot(sim.res.1a)
+# looks good! adding the dispersion formula solved the issues with the model.
+# slight pattern in residuals, but looks relatively good
+
+summary(herb.bio.2)
+Anova(herb.bio.2)
+
+drop1(herb.bio.2, test = "Chisq")
+herb.bio.3 <- update(herb.bio.2, ~. -location:barnacles:timediff)
+drop1(herb.bio.3, test = "Chisq")
+herb.bio.4 <- update(herb.bio.3, ~. -location:barnacles)
+drop1(herb.bio.4, test = "Chisq")
+herb.bio.5 <- update(herb.bio.4, ~. -barnacles:timediff)
+drop1(herb.bio.5, test = "Chisq")
+
+sim.res.1b <- simulateResiduals(herb.bio.5)
+plot(sim.res.1b)
+summary(herb.bio.5)
+Anova(herb.bio.5)
+
+# all the terms have been dropped that needed to be
 
 ## Model 2: Count data for Lottia at BP
 
