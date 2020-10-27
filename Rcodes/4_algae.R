@@ -4,14 +4,9 @@
 ## after much discussion, should use 3 dates for each response
 ## and also use a generalized linear model with a Tweedie distribution
 
-packages <- c("tidyverse", "glmmTMB", "DHARMa", "car", "metaDigitise")
-
-for (i in 1:length(packages)){
-  if (!require(packages[i], character.only = TRUE)) {
-    install.packages(packages[i], dependencies = TRUE)
-    library(packages[i], character.only = TRUE)
-  }
-}
+pkgs <- c("tidyverse", "glmmTMB", "DHARMa", "car", "metaDigitise")
+lapply(pkgs, install.packages, character.only = TRUE)
+lapply(pkgs, library, character.only = TRUE)
 
 se <- function(x){
   sd(x)/sqrt(length(x))

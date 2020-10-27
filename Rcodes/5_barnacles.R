@@ -1,13 +1,8 @@
 ## balanus and chthamalus models
 
-packages <- c("tidyverse", "glmmTMB", "DHARMa", "car")
-
-for (i in 1:length(packages)){
-  if (!require(packages[i], character.only = TRUE)) {
-    install.packages(packages[i], dependencies = TRUE)
-    library(packages[i], character.only = TRUE)
-  }
-}
+pkgs <- c("tidyverse", "glmmTMB", "DHARMa", "car")
+lapply(pkgs, install.packages, character.only = TRUE)
+lapply(pkgs, library, character.only = TRUE)
 
 se <- function(x){
   sd(x)/sqrt(length(x))

@@ -1,13 +1,8 @@
 ## April 2019
 ## Script to make Argentina & BC data analyzable by R
-packages <- c("tidyverse")
-
-for (i in 1:length(packages)){
-  if (!require(packages[i], character.only = TRUE)) {
-    install.packages(packages[i], dependencies = TRUE)
-    library(packages[i], character.only = TRUE)
-  }
-}
+pkgs <- c("tidyverse")
+lapply(pkgs, install.packages, character.only = TRUE)
+lapply(pkgs, library, character.only = TRUE)
 
 # convert from wide format to long format
 bc_cover <- read_csv("./raw_data/bc_bal_lot.csv") %>% 

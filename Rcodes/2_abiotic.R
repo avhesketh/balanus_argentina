@@ -3,12 +3,9 @@
 
 ## First load packages of interest
 
-packages <- c("tidyverse")
-
-if (!require(packages, character.only = TRUE)) {
-      install.packages(packages, dependencies = TRUE)
-      library(packages, character.only = TRUE)
-    }
+pkgs <- c("tidyverse")
+lapply(pkgs, install.packages, character.only = TRUE)
+lapply(pkgs, library, character.only = TRUE)
 
 # define standard error function for eventual plotting
 se <- function(x){
