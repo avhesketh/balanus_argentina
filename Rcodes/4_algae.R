@@ -4,7 +4,7 @@
 ## after much discussion, should use 3 dates for each response
 ## and also use a generalized linear model with a Tweedie distribution
 
-pkgs <- c("tidyverse", "glmmTMB", "DHARMa", "car", "metaDigitise")
+pkgs <- c("tidyverse", "glmmTMB", "DHARMa", "car")
 lapply(pkgs, install.packages, character.only = TRUE)
 lapply(pkgs, library, character.only = TRUE)
 
@@ -36,14 +36,14 @@ eph_bc_keep <- ephemerals %>%
   filter(location == "BP") %>% 
   filter(date == "2006-10-06" | date == "2007-04-06" | date == "2007-07-17")
 
-ephemerals_keep <- eph_bc_keep %>% 
+ephemerals_eq<- eph_bc_keep %>% 
   full_join(eph_arg_keep) 
 
 # Model 5: ephemeral cover
 
 eph.cover.1 <- glmmTMB(percent_cover ~ (limpets + barnacles + location + timediff)^2
                              + (1|block/location),
-                      data = ephemerals_keep,
+                      data = ephemerals_eq,
                       family = tweedie())
 
 sim.res.5 <- simulateResiduals(eph.cover.1)
@@ -96,16 +96,17 @@ per.cover.1 <- glmmTMB(percent_cover ~ (timediff + barnacles + location + limpet
 sim.res.6 <- simulateResiduals(per.cover.1)
 plot(sim.res.6)
 testTemporalAutocorrelation(sim.res.6)
+
 # the distribution seems potentially wrong! try working with a different error distribution
 
 # logit transform and work with gaussian distribution
-
+perennials_eq$barnacles <- factor(perennials_eq$barnacles, c("no","yes"))
 per.cover.2 <- glmmTMB(logit(percent_cover) ~ (timediff + barnacles + location + limpets)^3
                        + (1|block/location),
                        # add in dispersion formula based on residuals plots
                        dispformula = ~location*barnacles,
                        family = gaussian(),
-                       data = perennials_keep)
+                       data = perennials_eq)
 
 sim.res.6a <- simulateResiduals(per.cover.2)
 plot(sim.res.6a)
@@ -171,7 +172,7 @@ ealgae_summary <- ephemerals %>%
 
 # separate analysed data from nonanalysed to make visual distinction
 
-levels <- levels(as.factor(ephemerals_keep$timediff))
+levels <- levels(as.factor(ephemerals_eq$timediff))
 # separate out the analyzed timepoints from the dataset
 ealgae_analysed <- ealgae_summary %>% 
   filter(timediff %in% levels)
@@ -236,7 +237,7 @@ palgae_summary$Treatment <- factor(palgae_summary$Treatment,
 
 # separate analysed data from nonanalysed
 
-levels <- levels(as.factor(ephemerals_keep$timediff))
+levels <- levels(as.factor(perennials_eq$timediff))
 
 palgae_analysed <- palgae_summary %>% 
   filter(timediff %in% levels)
