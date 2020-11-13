@@ -25,6 +25,8 @@ herbivores <- read_csv("./clean_data/bio_responses.csv") %>%
   # we need a column for unique plot identifiers for modeling temporal autocorrelation later
   unite("plot_location", c(plot, location), remove = FALSE)
 
+#write_csv(herbivores, "./clean_data/herbivore_abundance.csv")
+
 # to compare between sites, we need to convert to biomass
 
 # read in shell length data for each species measured from photos
@@ -267,7 +269,7 @@ Anova(siph.abund.1)
 # script for creating figures for herbivory responses
 
 # herbivore biomass by location and barnacle treatment (limpet control plots only)
-herb_summary <- herb_biomass %>% 
+herb_summary <- read_csv("./clean_data/herbivore_biomass.csv") %>% 
   group_by(location, barnacles, timediff) %>% 
   summarize(av_bi = mean(biomass), se_bi = se(biomass)) %>% 
   mutate(barnacles = str_replace_all(barnacles, c("no" = "-B",
@@ -292,12 +294,12 @@ herbs <- ggplot(aes(x = timediff, y = av_bi, shape = Treatment,
   scale_shape_manual(values = c(16,1,16,1)) +
   scale_linetype_manual(values = c(1,6,1,6))+
   scale_colour_manual(values = c("steelblue3", "steelblue3","indianred3", "indianred3")) +
-  theme(axis.text.x = element_text(size = 17)) +
-  theme(axis.text.y = element_text(size = 17)) +
-  theme(axis.title.x = element_text(size = 19)) +
-  theme(axis.title.y = element_text(size = 19)) +
-  theme(legend.text = element_text(size = 17)) +
-  theme(legend.title = element_text(size = 19)) +
+  theme(axis.text.x = element_text(size = 16)) +
+  theme(axis.text.y = element_text(size = 16)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(axis.title.y = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 16)) +
+  theme(legend.title = element_text(size = 18)) +
   theme(legend.position = "top") +
   geom_errorbar(aes(ymin = av_bi - se_bi, ymax = av_bi + se_bi), width = 1.5)
 herbs
@@ -308,7 +310,8 @@ herbs
 
 # littorine and limpet abundance plots
 
-litt_summ <- litt_abund %>% 
+litt_summ <- read_csv("./clean_data/herbivore_abundance.csv") %>% 
+  filter(species == "Littorina") %>% 
   group_by(barnacles, limpets, timediff) %>% 
   summarize(av_ab = mean(count), se_ab = se(count)) %>% 
   rename("Barnacles" = barnacles) %>% 
@@ -328,7 +331,7 @@ litt_plot <- ggplot(aes(x = timediff, y = av_ab),
   geom_line(colour = "steelblue3", aes(lty = Barnacles)) +
   theme_classic() +
   scale_linetype_manual(values = c(6,1)) +
-  ylab(expression(~italic("Littorina")~ "spp. abundance")) +
+  ylab(expression("Abundance of"~italic("Littorina")~ "spp.")) +
   xlab("Time (weeks)") +
   scale_shape_manual(values = c(1,16)) +
   theme(axis.text.x = element_text(size = 18), axis.text.y = element_text(size = 18)) +
@@ -350,8 +353,8 @@ litt_plot
 
 # limpets and "limpets", control treatment only
 
-limpet_summ <- lott_abund %>% 
-  full_join(siph_abund) %>% 
+limpet_summ <- read_csv("./clean_data/herbivore_abundance.csv") %>% 
+  filter(species == "Lottia" | species == "Siphonaria") %>% 
   group_by(barnacles, location, species, timediff) %>% 
   summarize(av_ab = mean(count), se_ab = se(count)) %>% 
   rename("Barnacles" = barnacles) %>%  
@@ -365,20 +368,19 @@ limpet_summ$Treatment <- factor(limpet_summ$Treatment,
                                          "+B BP",
                                          "-B BP"))
 
-limpet_plot <- ggplot(aes(x = timediff, y = av_ab, colour = Treatment, shape = Treatment), 
-                    data = lott_summ) +
+limpet_plot <- ggplot(aes(x = timediff, y = av_ab, colour = Treatment, shape = Treatment), data = limpet_summ) +
   geom_point(size = 3) +
   geom_line(aes(lty = Treatment)) +
   scale_shape_manual(values = c(16,1,16,1)) +
   scale_linetype_manual(values = c(1,6,1,6)) +
   scale_colour_manual(values = c("indianred3", "indianred3", "steelblue3", "steelblue3")) +
   theme_classic() +
-  ylab("'Limpet' abundance") +
+  ylab(expression("Abundance of"~italic("Lottia")~"spp./"~italic("S. lessonii"))) +
   xlab("Time (weeks)") +
   theme(axis.text.x = element_text(size = 18)) +
   theme(axis.text.y = element_text(size = 18)) +
   theme(axis.title.x = element_text(size = 20)) +
-  theme(axis.title.y = element_text(size = 20)) +
+  theme(axis.title.y = element_text(size = 19.5)) +
   theme(legend.text = element_text(size = 18)) +
   theme(legend.title = element_text(size = 20)) +
   theme(plot.title = element_text(size = 20, hjust = 0.5)) +

@@ -83,7 +83,7 @@ bc_hum <-  read_csv("./raw_data/bc_hum.csv") %>%
   na.omit() %>% 
   mutate(site = "BS") %>% 
   # only have data from Jan 2015-May 2020 for Nuevo Gulf, so filter out other BC data
-  mutate(remove = ifelse(year == 2020 & month > 5, TRUE, FALSE)) %>% 
+  mutate(remove = ifelse(year == 2020, TRUE, FALSE)) %>% 
   filter(remove == FALSE) %>% 
   select(-remove)
 
@@ -91,12 +91,12 @@ bc_hum <-  read_csv("./raw_data/bc_hum.csv") %>%
 arg_hum <- read_csv("./raw_data/arg_hum.csv") %>% 
   select(1:3) %>% 
   mutate(site = "NG") %>% 
-  filter(year >= 2015)
+  filter(year >= 2015 & year < 2020)
 
 # join together and write combined clean dataframe
 hum <- bc_hum %>% 
   full_join(arg_hum)
-#write.csv(hum, "./clean_data/humidity_clean.csv")
+#write_csv(hum, "./clean_data/humidity_clean.csv")
 
 # model humidity between sites since we only really care about the overall mean conditions
 lm.hum <- lm(humidity ~ site, data = hum)
@@ -202,12 +202,9 @@ nnq_summary <- ggplot(aes(x = Site, y = nnquant, colour = Site), data = temp_sit
 
 #summarize humidity data
 
-hum <- read_csv("./clean_data/humidity_clean.csv") %>% 
-  group_by(site, month) %>% 
-  summarize(mean_hum = mean(humidity), se_hum = se(humidity)) %>% 
-  mutate(month = as.factor(month))
+hum <- read_csv("./clean_data/humidity_clean.csv")
 
-hum_site <- ggplot(aes(x = site, y = mean_hum, color = site),
+hum_site <- ggplot(aes(x = site, y = humidity, color = site),
                    data = hum) +
   theme_classic() +
   geom_boxplot(width = 0.8, lwd = 1) +
@@ -222,7 +219,7 @@ hum_site <- ggplot(aes(x = site, y = mean_hum, color = site),
   theme(legend.title = element_text(size = 24)) +
   theme(legend.position = "none") +
   xlab("Study region")
-
+hum_site
 #ggsave("./figures/Figure_1d.tiff", plot = hum_site, 
       #width = 5, height = 6, units = "in",
       #dpi = 600)
