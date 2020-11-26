@@ -32,7 +32,7 @@ herbivores <- read_csv("./clean_data/bio_responses.csv") %>%
 # to compare between sites, we need to convert to biomass
 
 # read in shell length data for each species measured from photos
-shell_length <- read_csv("./raw_data/herbivores_sl.csv") %>% 
+shell_length <- read_csv("./raw_data/grazer_size_BP_PA.csv") %>% 
   select(-limpets, -barnacles, -date) %>% 
   mutate(sp = str_replace_all(sp, c("siphonaria" = "Siphonaria", 
                                     "lsc" = "Littorina",
@@ -40,7 +40,7 @@ shell_length <- read_csv("./raw_data/herbivores_sl.csv") %>%
   rename(size_mm = size)
 
 # building models for relationship of shell length and dry weight for each species
-siph <- read_csv("./raw_data/siphonaria_dwsl.csv") %>% 
+siph <- read_csv("./raw_data/siphonaria_dwsl_Tablado_SciMar_2001.csv") %>% 
   rename(dw_mg = dw, sl_mm = sl)
 # these data are extracted from Toblado & Gappa 2001
 siph_dw_sl <- lm(log(dw_g) ~ log(sl_mm), data = siph)
@@ -52,12 +52,15 @@ siph_dw <- function(len) {
 }
 
 # need to extract the data from existing figures
-#lott_litt <- metaDigitise("./raw_data", summary = FALSE)
+#lott_litt <- metaDigitise("./raw_data", summary = FALSE) # select 2
+
 # littorine data from North 1954
-#litt <- do.call(rbind, lott_litt$scatterplot[1]) %>% 
+litt <- do.call(rbind, lott_litt$scatterplot[1]) %>% 
   # get length in terms of mm, not cm
-  #mutate(x = x*10) %>% 
-  #rename(sl_mm = x, dw_g = y)
+  mutate(sl_mm = x*10) %>% 
+  rename(dw_g = y) %>% 
+  select(sl_mm,dw_g) %>% 
+  mutate(species = "littorina")
 
 litt_dw_sl <- lm(log(dw_g) ~ log(sl_mm), data = litt)
 summary(litt_dw_sl)
@@ -67,10 +70,11 @@ litt_dw <- function(len) {
 }
 
 # lottia data from Frank 1965
-#lott <- do.call(rbind, lott_litt$scatterplot[2]) %>% 
-  # convert length to mm, convert volume to dry weight 
-  #mutate(x = x*10, y = y*0.35) %>% 
-  #rename(sl_mm = x, dw_g = y)
+lott <- do.call(rbind, lott_litt$scatterplot[2]) %>% 
+ # convert length to mm, convert volume to dry weight 
+  mutate(sl_mm = x*10, dw_g = y*0.35) %>% 
+  select(sl_mm,dw_g) %>% 
+  mutate(species = "lottia")
 
 lott_dw_sl <- lm(log(dw_g) ~ log(sl_mm), data = lott)
 summary(lott_dw_sl)
@@ -79,6 +83,11 @@ summary(lott_dw_sl)
 lottia_dw <- function(len) {
   log_dw <- 1.55329*log(len) - 6.51138
 }
+
+grazers_BC <- litt %>% 
+  full_join(lott)
+
+#write_csv(grazers_BC, "./raw_data/littorina_lottia_dwsl_North_Frank.csv")
 
 # now for biomass estimation
 set.seed(26)
