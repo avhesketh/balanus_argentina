@@ -11,21 +11,20 @@ se <- function(x){
 # read in dataframes
 balanus <- read_csv("./clean_data/bio_responses.csv", col_types=
                       cols("D", "f", "f", "f", "f", "f", "n", "n", "f", "n")) %>% 
-  filter(species == "Balanus_recruits")
+  filter(species == "Balanus_recruits") %>% 
+  # reorder factors for later visualization
+  mutate(limpets = factor(limpets, levels = c("con","in","out")),
+         barnacles = factor(barnacles, levels = c("no","yes")),
+         location = factor(location, levels = c("BP","PA")))
 
-# reorder factors for later visualization
-balanus$limpets <- factor(balanus$limpets, levels = c("con","in","out"))
-balanus$barnacles <- factor(balanus$barnacles, levels = c("no","yes"))
-balanus$location <- factor(balanus$location, levels = c("PA","BP"))
 
 # repeat for chthamalus barnacles
 chthamalus <- read_csv("./clean_data/bio_responses.csv", col_types=
                          cols("D", "f", "f", "f", "f", "f", "n", "n", "f", "n")) %>% 
-  filter(species == "Chthamalus_recruits")
-
-chthamalus$limpets <- factor(chthamalus$limpets, levels = c("con","in","out"))
-chthamalus$barnacles <- factor(chthamalus$barnacles, levels = c("no","yes"))
-chthamalus$location <- factor(chthamalus$location, levels = c("PA","BP"))
+  filter(species == "Chthamalus_recruits") %>% 
+  mutate(limpets = factor(limpets, levels = c("con","in","out")),
+         barnacles = factor(barnacles, levels = c("no","yes")),
+         location = factor(location, levels = c("BP","PA")))
 
 # Model 8: Balanus recruitment
 

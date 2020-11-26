@@ -3,8 +3,10 @@
 ##
 
 pkgs <- c("tidyverse", "glmmTMB", "DHARMa", "car", "metaDigitise")
-lapply(pkgs, install.packages, character.only = TRUE)
+#lapply(pkgs, install.packages, character.only = TRUE)
 lapply(pkgs, library, character.only = TRUE)
+
+rm(pkgs)
 
 se <- function(x){
   sd(x)/sqrt(length(x))
@@ -34,12 +36,14 @@ shell_length <- read_csv("./raw_data/herbivores_sl.csv") %>%
   select(-limpets, -barnacles, -date) %>% 
   mutate(sp = str_replace_all(sp, c("siphonaria" = "Siphonaria", 
                                     "lsc" = "Littorina",
-                                    "ldig" = "Lottia")))
+                                    "ldig" = "Lottia"))) %>% 
+  rename(size_mm = size)
 
 # building models for relationship of shell length and dry weight for each species
-siph <- read_csv("./raw_data/siphonaria_dwsl.csv")
+siph <- read_csv("./raw_data/siphonaria_dwsl.csv") %>% 
+  rename(dw_mg = dw, sl_mm = sl)
 # these data are extracted from Toblado & Gappa 2001
-siph_dw_sl <- lm(log(dw_g) ~ log(sl), data = siph)
+siph_dw_sl <- lm(log(dw_g) ~ log(sl_mm), data = siph)
 summary(siph_dw_sl)
 
 # create a function from the output
@@ -52,9 +56,10 @@ siph_dw <- function(len) {
 # littorine data from North 1954
 #litt <- do.call(rbind, lott_litt$scatterplot[1]) %>% 
   # get length in terms of mm, not cm
-  #mutate(x = x*10)
+  #mutate(x = x*10) %>% 
+  #rename(sl_mm = x, dw_g = y)
 
-litt_dw_sl <- lm(log(y) ~ log(x), data = litt)
+litt_dw_sl <- lm(log(dw_g) ~ log(sl_mm), data = litt)
 summary(litt_dw_sl)
 
 litt_dw <- function(len) {
@@ -64,9 +69,10 @@ litt_dw <- function(len) {
 # lottia data from Frank 1965
 #lott <- do.call(rbind, lott_litt$scatterplot[2]) %>% 
   # convert length to mm, convert volume to dry weight 
-  #mutate(x = x*10, y = y*0.35)
+  #mutate(x = x*10, y = y*0.35) %>% 
+  #rename(sl_mm = x, dw_g = y)
 
-lott_dw_sl <- lm(log(y) ~ log(x), data = lott)
+lott_dw_sl <- lm(log(dw_g) ~ log(sl_mm), data = lott)
 summary(lott_dw_sl)
 
 # create function from model outputs
@@ -77,31 +83,31 @@ lottia_dw <- function(len) {
 # now for biomass estimation
 set.seed(26)
 # create an empty column to receive dry weights
-herbivores$total_dw <- NA
+herbivores$total_dw_g <- NA
 
 for (x in 1:length(herbivores$species)){
   # subset shell lengths of the appropriate species for sampling
-  sub <- subset(shell_length$size, shell_length$sp == herbivores$species[x])
+  sub <- subset(shell_length$size_mm, shell_length$sp == herbivores$species[x])
   # and sample this subset
   y <- sample(sub, size = herbivores$count[x], replace = TRUE)
   # if the species is siphonaria, perform the appropriate function on the sample
   if (herbivores$species[x] == "Siphonaria"){
-    herbivores$total_dw[x] <- sum(exp(siph_dw(y)))
+    herbivores$total_dw_g[x] <- sum(exp(siph_dw(y)))
   }
   # and same for littorines
   if (herbivores$species[x] == "Littorina"){
-    herbivores$total_dw[x] <- sum(exp(litt_dw(y)))
+    herbivores$total_dw_g[x] <- sum(exp(litt_dw(y)))
   }
   # and for lottia
   if (herbivores$species[x] == "Lottia") {
-    herbivores$total_dw[x] <- sum(exp(siph_dw(y)))
+    herbivores$total_dw_g[x] <- sum(exp(siph_dw(y)))
   }
 }
 
 # create a new dataframe for total biomass
 herb_biomass <- herbivores %>% 
   group_by(location, timediff, plot, block, barnacles) %>% 
-  summarize(biomass = sum(total_dw)) %>% 
+  summarize(biomass_g = sum(total_dw_g)) %>% 
   unite(plot_location, c(plot,location), remove = FALSE)
 
 #write_csv(herb_biomass, "./clean_data/herbivore_biomass.csv")
@@ -109,7 +115,9 @@ herb_biomass <- herbivores %>%
 
 # Model 1: biomass between locations
 
-herb.bio.1 <- glmmTMB(biomass ~ (location+barnacles+timediff)^3 +
+#herb_biomass <- read_csv("./clean_data/herbivore_biomass.csv")
+
+herb.bio.1 <- glmmTMB(biomass_g ~ (location+barnacles+timediff)^3 +
                         (1|block/location),
                    data = herb_biomass,
                    family = tweedie()
@@ -125,7 +133,7 @@ plot(residuals(herb.bio.1) ~ as.factor(herb_biomass$barnacles)) # a lot of varia
 plot(residuals(herb.bio.1) ~ as.factor(herb_biomass$location)) # some variation here too
 plot(residuals(herb.bio.1) ~ (herb_biomass$timediff)) 
 
-herb.bio.2 <- glmmTMB(biomass ~ (location+barnacles+timediff)^3 +
+herb.bio.2 <- glmmTMB(biomass_g ~ (location+barnacles+timediff)^3 +
                       (1|block/location),
                     data = herb_biomass,
                     dispformula = ~barnacles,
@@ -205,6 +213,8 @@ testTemporalAutocorrelation(sim.res.2b)
 
 # no assumptions appear to be violated. The final model:
 print(lott.abund.3)
+summary(lott.abund.3)
+Anova(lott.abund.3)
 
 ## 3: Count data for Littorina at BP
 litt_abund <- herbivores %>% 
@@ -271,7 +281,7 @@ Anova(siph.abund.1)
 # herbivore biomass by location and barnacle treatment (limpet control plots only)
 herb_summary <- read_csv("./clean_data/herbivore_biomass.csv") %>% 
   group_by(location, barnacles, timediff) %>% 
-  summarize(av_bi = mean(biomass), se_bi = se(biomass)) %>% 
+  summarize(av_bi = mean(biomass_g), se_bi = se(biomass_g)) %>% 
   mutate(barnacles = str_replace_all(barnacles, c("no" = "-B",
                                                   "yes" = "+B")),
          Treatment = paste(barnacles,location))
@@ -319,10 +329,11 @@ litt_summ <- read_csv("./clean_data/herbivore_abundance.csv") %>%
                                                   "yes" = "+B")),
          limpets = str_replace_all(limpets, c("con" = "Control",
                                               "in" = "Inclusion",
-                                              "out" = "Exclusion")))
+                                              "out" = "Exclusion"))) %>% 
+  mutate(limpets = factor(limpets, levels = c("Control","Inclusion","Exclusion")))
 
 labels.litt <- data.frame(label = c("Control", "Inclusion", "Exclusion"),
-                          limpets = c("Control", "Inclusion", "Exclusion"))
+                          limpets = as.factor(c("Control", "Inclusion", "Exclusion")))
 
 
 litt_plot <- ggplot(aes(x = timediff, y = av_ab), 
@@ -348,8 +359,8 @@ litt_plot <- ggplot(aes(x = timediff, y = av_ab),
 litt_plot
 
 #ggsave("./figures/Figure_2a.tiff", plot = litt_plot, 
-#width = 6.5, height = 5, units = "in",
-#dpi = 600)
+       #width = 6.5, height = 5, units = "in",
+       #dpi = 600)
 
 # limpets and "limpets", control treatment only
 

@@ -22,9 +22,9 @@ ephemerals <- read_csv("./clean_data/bio_responses.csv", col_types=
   # note that argentina data should be missing initial time points because of treatment artifact
   mutate(remove = if_else(location == "PA" & timediff == 0, TRUE, FALSE)) %>%
   filter(remove == FALSE) %>% 
-  select(-remove)
-
-ephemerals$limpets <- factor(ephemerals$limpets, levels = c("con","in","out"))
+  select(-remove) %>% 
+  mutate(limpets = factor(limpets, levels = c("con","in","out")),
+          barnacles = factor(barnacles, levels = c("no","yes")))
 
 # keep only three timepoints for each site: fall and spring equinoxes
 
@@ -70,9 +70,8 @@ Anova(eph.cover.2)
 
 perennials <- read_csv("./clean_data/bio_responses.csv", col_types=
   cols("D", "f", "f", "f", "f", "f", "n", "n", "f", "n")) %>% 
-  filter(species == "Perennials")
-
-perennials$limpets <- factor(perennials$limpets, levels = c("con","in","out"))
+  filter(species == "Perennials") %>% 
+  mutate(limpets = factor(limpets, levels = c("con","in","out")))
 
 
 # need to subset dates because the data are overly complex and non-linear with respect to time
@@ -85,7 +84,8 @@ per_bc_keep <- perennials %>%
   filter(date == "2006-10-06" | date == "2007-04-06" | date == "2007-07-17")
 
 perennials_eq <- per_arg_keep %>% 
-  full_join(per_bc_keep) 
+  full_join(per_bc_keep)  %>% 
+  mutate(barnacles = factor(barnacles, c("no","yes")))
 
 per.cover.1 <- glmmTMB(percent_cover ~ (timediff + barnacles + location + limpets)^3
                         ,
@@ -100,7 +100,7 @@ testTemporalAutocorrelation(sim.res.6)
 # the distribution seems potentially wrong! try working with a different error distribution
 
 # logit transform and work with gaussian distribution
-perennials_eq$barnacles <- factor(perennials_eq$barnacles, c("no","yes"))
+
 per.cover.2 <- glmmTMB(logit(percent_cover) ~ (timediff + barnacles + location + limpets)^3
                        + (1|block/location),
                        # add in dispersion formula based on residuals plots
