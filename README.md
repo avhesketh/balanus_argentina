@@ -15,7 +15,7 @@ Within the raw data folder, there are a number of data frames used for eventual 
 
 3) siphonaria_PA.csv: _Siphonaria lessonii_ abundances within plots for timepoints after 2005-12.
 
-4) humidity_PA.csv: relative humidity and other environmental data from Punta Ameghino collected January 2007 to May 2020 at a CONICET meteorological station
+4) humidity_PA.csv: relative humidity and other environmental data from Punta Ameghino collected January 2007 to May 2020 at a CENPAT meteorological station
 
 5) temperature_PA_200603.csv: intertidal temperature data collected at Punta Ameghino from December 2005-March 2006
 
@@ -23,7 +23,7 @@ Within the raw data folder, there are a number of data frames used for eventual 
 
 7) temperature_BP_200609.csv: intertidal temperature data collected at Bluestone Point from June 2006-September 2006
 
-8) humidity_BP.csv: relative humidity collected in Tofino, British Columbia, at a weather station with very similar conditions to the Bluestone Point study site from January 2015 to September 2020.
+8) humidity_BP.csv: relative humidity collected in Tofino, British Columbia, at a DFO weather station with very similar conditions to the Bluestone Point study site from January 2015 to September 2020.
 
 9) fucus_BP_200707.csv: Cover of _Fucus distichus_ perennial algae at Bluestone Point over the course of the experiment extracted from either data notebooks or images using ImageJ.
 
