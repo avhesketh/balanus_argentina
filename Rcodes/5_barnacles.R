@@ -205,6 +205,6 @@ chtham <- ggplot(aes(x = timediff, y = av_abund, shape = Barnacles),
                 width = 1.5, colour = "steelblue3")
 chtham
 
-#ggsave("./figures/Figure_S2_S3.tiff", plot = chtham,
+#ggsave("./figures/Figure_A1_S5.tiff", plot = chtham,
 #width = 7, height = 5, units = "in",
 #dpi = 600)
