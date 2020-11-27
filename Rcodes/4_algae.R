@@ -273,7 +273,7 @@ lpalgae <- ggplot(aes(x = timediff, y = log_av_cover, shape = Treatment,
                     ymax = log_av_cover + log_se_cover), data = palgae_analysed, width = 1.5) 
 lpalgae
 
-#ggsave("./figures/Figure_A1_S3.tiff", plot = lpalgae, 
+#ggsave("./figures/Figure_S1_S3.tiff", plot = lpalgae, 
        #width = 7, height = 5, units = "in",
        #dpi = 600)
 
@@ -348,6 +348,6 @@ fucus_plot <- ggplot(aes(x = timediff, y = av_cover, shape = Barnacles),
                 width = 1.5, colour = "steelblue3")
 fucus_plot
 
-#ggsave("./figures/Figure_A1_S4.tiff", plot = fucus_plot,
+#ggsave("./figures/Figure_S1_S4.tiff", plot = fucus_plot,
       #width = 7, height = 5, units = "in",
       #dpi = 600)
