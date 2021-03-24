@@ -15,14 +15,14 @@ se <- function(x){
 # First, read in dataframes and calculate the time since/until summer solstice 
 # for each measurement in each hemisphere
 
-bc <- read_csv("./raw_data/bc_ibutton.csv") %>% 
+bc <- read_csv("./raw_data/temperature_BP_200609.csv") %>% 
   mutate(site = "BP") %>% 
   mutate(date = as.Date(date, format = "%m/%d/%Y")) %>% 
   # here, we calculate dss as the 'days since solstice', in N. America, June 21
   mutate(dss = difftime(date, "2006-06-21", units = "days")) %>% 
   na.omit()
 
-arg <- read_csv("./raw_data/arg_ibutton.csv") %>% 
+arg <- read_csv("./raw_data/temperature_PA_200603.csv") %>% 
   mutate(site = "PA") %>% 
   # and in the southern hemisphere, solstice is instead Sept. 21
   mutate(dss = difftime(date, "2009-12-21", units = "days"))
@@ -75,7 +75,7 @@ anova(lm.nnquant)
 # Now for humidity data
 
 # read in environmental data for BC and isolate only monthly humidity data
-bc_hum <-  read_csv("./raw_data/bc_hum.csv") %>% 
+bc_hum <-  read_csv("./raw_data/humidity_BP.csv") %>% 
   rename(year = "Year", month = "Month", day = "Day", temp = "Temp...C.",
          hum = "Rel.Hum....") %>% 
   group_by(year, month) %>% 
@@ -88,7 +88,7 @@ bc_hum <-  read_csv("./raw_data/bc_hum.csv") %>%
   select(-remove)
 
 # read in data for Argentina
-arg_hum <- read_csv("./raw_data/arg_hum.csv") %>% 
+arg_hum <- read_csv("./raw_data/humidity_PA.csv") %>% 
   select(1:3) %>% 
   mutate(site = "NG") %>% 
   filter(year >= 2015 & year < 2020)

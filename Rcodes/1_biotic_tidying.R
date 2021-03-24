@@ -41,7 +41,7 @@ arg_cover <- read_csv("./raw_data/community_PA_200602.csv") %>%
 
 arg_tidy <- read_csv("./raw_data/community_PA_200602.csv") %>% 
   select(2:3, 5:8, 19) %>% 
-  pivot_longer(names_to = "species", values_to = "count", 5) %>% 
+  pivot_longer(names_to = "species", values_to = "count", cols = 5:6) %>% 
   filter(!grepl("lost", notes)) %>% 
   mutate(count = if_else(is.na(count),0, count)) %>% 
   full_join(arg_cover) %>%
@@ -147,7 +147,7 @@ write.csv(chthamalus, "../data/chthamalus_recruitment.csv")
 
 ## fucus cover data
 
-fucus <- read_csv("./raw_data/fucus.csv") %>% 
+fucus <- read_csv("./raw_data/fucus_BP_200707.csv") %>% 
   mutate(date = as.Date(date, format = "%y-%m-%d"),
          timediff = difftime(date, min(date), units = c("weeks"))) %>% 
   rename("percent_cover" = fucus_cover, "barnacles" = balanus) %>% 
