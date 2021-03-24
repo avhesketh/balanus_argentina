@@ -285,6 +285,7 @@ drop1(siph.abund.1, test = "Chisq")
 summary(siph.abund.1)
 Anova(siph.abund.1)
 
+
 # script for creating figures for herbivory responses
 
 # herbivore biomass by location and barnacle treatment (limpet control plots only)

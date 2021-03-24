@@ -1,4 +1,4 @@
-plot_location,location,timediff,plot,block,barnacles,biomass
+plot_location,location,timediff,plot,block,barnacles,biomass_g
 1_BP,BP,0,1,A,yes,0.042900940368042026
 2_BP,BP,0,2,B,yes,0.006172653466010682
 3_BP,BP,0,3,C,yes,0.015918014765450413

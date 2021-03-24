@@ -5,13 +5,13 @@ lapply(pkgs, install.packages, character.only = TRUE)
 lapply(pkgs, library, character.only = TRUE)
 
 # convert from wide format to long format
-bc_cover <- read_csv("./raw_data/bc_bal_lot.csv") %>% 
+bc_cover <- read_csv("./raw_data/community_BP_200707.csv") %>% 
   select(1:5, 15:19) %>% 
   # algae need percent cover as measurement
   pivot_longer(cols = 6:10, names_to = "species", values_to = "percent_cover") %>% 
   mutate(percent_cover = if_else(is.na(percent_cover),0, percent_cover))
   
-bc_tidy <- read_csv("./raw_data/bc_bal_lot.csv") %>% 
+bc_tidy <- read_csv("./raw_data/community_BP_200707.csv") %>% 
   select(1:10) %>% 
   # and invertebrates need count data
   pivot_longer(cols = 6:10, names_to = "species", values_to = "count") %>% 
@@ -33,14 +33,14 @@ bc_tidy <- read_csv("./raw_data/bc_bal_lot.csv") %>%
 # repeat same process for Argentina data
 # NA values at this location are a mix of zeroes and missing data from plots getting dislodged
 # remove data rows for lost plots, rest of NA are zeroes
-arg_cover <- read_csv("./raw_data/arg_bal_lot.csv") %>% 
+arg_cover <- read_csv("./raw_data/community_PA_200602.csv") %>% 
   select(2:3, 5:6, 10:14, 19) %>% 
   pivot_longer(names_to = "species", values_to = "percent_cover", cols = 5:9) %>% 
   filter(!grepl("lost", notes)) %>% 
   mutate(percent_cover = if_else(is.na(percent_cover), 0, percent_cover))
 
-arg_tidy <- read_csv("./raw_data/arg_bal_lot.csv") %>% 
-  select(2:3, 5:6, 8, 19) %>% 
+arg_tidy <- read_csv("./raw_data/community_PA_200602.csv") %>% 
+  select(2:3, 5:8, 19) %>% 
   pivot_longer(names_to = "species", values_to = "count", 5) %>% 
   filter(!grepl("lost", notes)) %>% 
   mutate(count = if_else(is.na(count),0, count)) %>% 
@@ -72,7 +72,7 @@ arg_tidy <- read_csv("./raw_data/arg_bal_lot.csv") %>%
 
 
 # add in siphonaria densities to argentina data
-siphonaria_density <- read_csv("./raw_data/limpet_density.csv", skip = 1,
+siphonaria_density <- read_csv("./raw_data/siphonaria_PA_200702.csv", skip = 1,
          # name all density columns the dates that data were collected
           col_names = c("barnacles", "limpets", "replicate", "plot",
                        "x","2006-04-26", "x2", "2006-05-12",
@@ -90,7 +90,7 @@ siphonaria_density <- read_csv("./raw_data/limpet_density.csv", skip = 1,
 # note that unlike previous dataframes, missing values here are lost plots and so are real NAs
 
 # tidy initial timepoint data to be joined with rest of data
-initial_timept <- read_csv("./raw_data/arg_bal_lot_initial.csv") %>% 
+initial_timept <- read_csv("./raw_data/community_PA_200512.csv") %>% 
   select(-3, -4, -8, -9) %>% 
   rename(barnacles = 'Balanus', limpets = 'Siphonaria') %>%
   # get cover and count into their own columns w associated species column
@@ -130,7 +130,6 @@ bio_responses <- bc_tidy %>%
   unique()
 
 #write_csv(bio_responses, "./clean_data/bio_responses.csv")
-
 
 
 #barnacle recruitment

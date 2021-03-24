@@ -168,6 +168,7 @@ ealgae_summary <- ephemerals %>%
                                               "out" = "Exclusion")),
          barnacles = str_replace_all(barnacles, c("no" = "-B",
                                                   "yes" = "+B")),
+         limpets = factor(limpets, levels = c("Control","Inclusion","Exclusion")),
         Treatment = paste(barnacles, location))
 
 # separate analysed data from nonanalysed to make visual distinction
@@ -185,16 +186,26 @@ ealgae_summary$Treatment <- factor(ealgae_summary$Treatment,
                                               "-B PA",
                                               "+B BP",
                                               "-B BP"))
+col.names.eph <- colnames(ealgae_summary)
+# add in dummy point to bump up y axis to 5 for control limpet plot
+df.eph <- data.frame( values = c("BP","-B","Control",0,5,0,"dummy"), names  = col.names.eph) %>% 
+  pivot_wider(names_from = names, values_from = values) %>% 
+  mutate(timediff = as.numeric(timediff), av_cover = as.numeric(av_cover),
+         se_cover = as.numeric(se_cover))
+ealgae_summary <- ealgae_summary %>% 
+  full_join(df.eph) %>% 
+  mutate(Treatment = factor(Treatment, levels = c("+B PA","-B PA","+B BP","-B BP","dummy")),
+         limpets = factor(limpets, levels = c("Control","Inclusion","Exclusion")))
 
 ealgae <- ggplot(aes(x = timediff, y = av_cover, shape = Treatment, color = Treatment), 
                  data = ealgae_nonan) +
   geom_line(aes(lty=Treatment), data = ealgae_summary) +
   geom_point(size = 3, colour = "grey80") +
   geom_point(size = 3, data = ealgae_analysed) +
-  scale_shape_manual(values = c(16,1,16,1)) +
-  scale_linetype_manual(values = c(1,6,1,6))+
+  scale_shape_manual(values = c(16,1,16,1, 2)) +
+  scale_linetype_manual(values = c(1,6,1,6, 2))+
   theme_classic() +
-  scale_colour_manual(values = c("indianred3", "indianred3", "steelblue3", "steelblue3")) +
+  scale_colour_manual(values = c("indianred3", "indianred3", "steelblue3", "steelblue3", "white")) +
   ylab("Ephemeral algal cover (%)") +
   xlab("Time (weeks)") +
   xlim(c(0,63)) +
@@ -206,14 +217,22 @@ ealgae <- ggplot(aes(x = timediff, y = av_cover, shape = Treatment, color = Trea
   theme(legend.title = element_text(size = 16)) +
   theme(strip.text.y = element_text(size = 14)) +
   theme(panel.spacing = unit(1.2, "lines")) +
+  scale_y_continuous(breaks = c(0,5,10,20,30,40,50,60,70,80)) +
   facet_wrap(~limpets, scales = "free", strip.position = "right", nrow = 3)+
   geom_errorbar(colour = "grey80", aes(ymin = av_cover - se_cover, ymax = av_cover + se_cover), width = 1.5) +
   geom_errorbar(aes(ymin = av_cover - se_cover, ymax = av_cover + se_cover), data = ealgae_analysed, width = 1.5) 
 ealgae
 
-#ggsave("./figures/Figure_3.tiff", plot = ealgae, 
-#width = 7, height = 5, units = "in",
-#dpi = 600)
+# adjust length of y axes in panels
+eph.table <- ggplotGrob(ealgae)
+eph.table$heights[[7]] <- unit(0.21, "null")
+eph.table$heights[[11]] <- unit(0.5, "null")
+eph.scaled <- as.ggplot(eph.table)
+eph.scaled
+
+#ggsave("./figures/Figure_3.tiff", plot = eph.scaled, 
+#width = 6, height = 8, units = "in", compression = "lzw",
+#dpi = 800)
 
 # perennial algae - all
 
@@ -227,6 +246,7 @@ palgae_summary <- perennials %>%
                                               "out" = "Exclusion")),
          barnacles = str_replace_all(barnacles, c("no"="-B",
                                                   "yes"="+B")),
+         limpets = factor(limpets, levels = c("Control","Inclusion","Exclusion")),
          Treatment = paste(barnacles, location))
 
 palgae_summary$Treatment <- factor(palgae_summary$Treatment, 
@@ -307,8 +327,8 @@ palgae <- ggplot(aes(x = timediff, y = av_cover, shape = Treatment,
 palgae
 
 #ggsave("./figures/Figure_4.tiff", plot = palgae, 
-#width = 7, height = 5, units = "in",
-#dpi = 600)
+#width = 6, height = 8, units = "in", compression = "lzw",
+#dpi = 800)
 
 # fucus at BP
 glimpse(fucus)

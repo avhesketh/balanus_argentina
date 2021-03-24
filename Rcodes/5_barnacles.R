@@ -1,9 +1,9 @@
 ## balanus and chthamalus models
 
-pkgs <- c("tidyverse", "glmmTMB", "DHARMa", "car")
+pkgs <- c("tidyverse", "glmmTMB", "DHARMa", "car", "grid", "ggplotify")
 lapply(pkgs, install.packages, character.only = TRUE)
 lapply(pkgs, library, character.only = TRUE)
-
+rm(pkgs)
 se <- function(x){
   sd(x)/sqrt(length(x))
 }
@@ -32,59 +32,49 @@ chthamalus <- read_csv("./clean_data/bio_responses.csv", col_types=
 bal.count.1 <- glmmTMB(count ~ (location + barnacles + limpets + timediff)^3 +
                         (1|block/location),
                       data = balanus,
-                      family = nbinom1())
+                      family = nbinom2())
 
 sim.res.8 <- simulateResiduals(bal.count.1)
 plot(sim.res.8)
 testTemporalAutocorrelation(sim.res.8)
 
 plot(residuals(bal.count.1) ~ balanus$barnacles)
-plot(residuals(bal.count.1) ~ balanus$limpets)
-plot(residuals(bal.count.1) ~ balanus$location) # one pulse of recruitment in BC
+plot(residuals(bal.count.1) ~ balanus$limpets) # exclusion treatment has more dispersion
+plot(residuals(bal.count.1) ~ balanus$location) # one pulse of recruitment in BC means residuals different between location
 plot(residuals(bal.count.1) ~ balanus$timediff) # which also pops up in time
 
 # removing problematic timepoint from barnacle data doesn't help
-# removing block term lowers AIC
+# removing block term raises AIC
+# location*limpets is the best dispersion formula in terms of AIC
 
-bal.count.2 <- glmmTMB(count ~ (location + barnacles + limpets + timediff)^3 +
-                         (1|block/location),
-                      dispformula = ~location*timediff,
+bal.count.2 <- glmmTMB(count ~ (location + barnacles + limpets + timediff)^3
+                       + (1|block/location),
+                      dispformula = ~location*limpets,
                       data = balanus,
-                      family = nbinom1())
+                      family = nbinom2())
 
 sim.res.8a <- simulateResiduals(bal.count.2)
 plot(sim.res.8a)
 
-# getting rid of the dispersion formula is a BAD idea though based on AIC
-bal.count.3 <- glmmTMB(count ~ (location + barnacles + limpets + timediff)^3 +
-                        (1|block/location),
-                      data = balanus,
-                      dispformula = ~timediff + location,
-                      family = nbinom2())
-sim.res.8b <- simulateResiduals(bal.count.3)
-plot(bal.count.3)
+# the diagnostic plots all check out
 
-# finally the plots look good! 
+drop1(bal.count.2, test = "Chisq")
+
+bal.count.3 <- update(bal.count.2, ~. - barnacles:limpets:timediff)
+
 drop1(bal.count.3, test = "Chisq")
 
-bal.count.4 <- update(bal.count.3, ~. - barnacles:limpets:timediff)
+bal.count.4 <- update(bal.count.3, ~. - location:barnacles:limpets)
 
 drop1(bal.count.4, test = "Chisq")
 
-bal.count.5 <- update(bal.count.4, ~. - location:barnacles:limpets)
+# p value not significant for barnacles:limpets, but AIC is not really improved. Retain term.
 
-drop1(bal.count.5, test = "Chisq")
-
-bal.count.6 <- update(bal.count.5, ~. - barnacles:limpets)
-
-drop1(bal.count.6, test = "Chisq")
-
-
-sim.res.8b <- simulateResiduals(bal.count.6)
+sim.res.8b <- simulateResiduals(bal.count.4)
 plot(sim.res.8b)
 
-summary(bal.count.6)
-Anova(bal.count.6)
+summary(bal.count.4)
+Anova(bal.count.4)
 
 ## Model 9: Chthamalus
 
@@ -144,7 +134,8 @@ bal_summary <- balanus %>%
          Treatment = factor(Treatment, levels = c("+B PA",
                                                  "-B PA",
                                                  "+B BP",
-                                                 "-B BP")))
+                                                 "-B BP")),
+         limpets = factor(limpets, levels = c("Control","Inclusion","Exclusion")))
 
 bal <- ggplot(aes(x = timediff, y = av_abund, shape = Treatment, color = Treatment), 
               data = bal_summary) +
@@ -166,12 +157,18 @@ bal <- ggplot(aes(x = timediff, y = av_abund, shape = Treatment, color = Treatme
   theme(plot.title = element_text(size = 16, hjust = 0.5)) +
   theme(strip.text.y = element_text(size = 14)) +
   theme(panel.spacing = unit(1.2, "lines")) +
+  scale_y_continuous(breaks = c(0,30,60,90,120,150)) +
   geom_errorbar(aes(ymin = av_abund - se_abund, ymax = av_abund + se_abund), width = 1.5)
 bal
 
-#ggsave("./figures/Figure_5.tiff", plot = bal,
-#width = 7, height = 5, units = "in",
-#dpi = 600)
+bal.table <- ggplotGrob(bal)
+bal.table$heights[[7]] <- unit(0.533, "null")
+bal.table$heights[[11]] <- unit(0.467, "null")
+bal.scaled <- as.ggplot(bal.table)
+
+#ggsave("./figures/Figure_5.tiff", plot = bal.scaled,
+#width = 6, height = 8, units = "in", compression = "lzw",
+#dpi = 800)
 
 # Chthamalus
 
