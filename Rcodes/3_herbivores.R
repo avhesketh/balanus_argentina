@@ -19,9 +19,9 @@ herbivores <- read_csv("./clean_data/bio_responses.csv") %>%
   # all three of our grazer species
   filter(species == "Lottia" | species == "Siphonaria" | species == "Littorina") %>%
   # for Lottia and Siphonaria, we only want control plots where limpet densities reflect natural responses
-  mutate(remove = ifelse(species == "Lottia" & limpets != "con", TRUE, FALSE)) %>% 
+  mutate(remove = ifelse(species == "Lottia" & herbivores != "con", TRUE, FALSE)) %>% 
   filter(remove == FALSE) %>% 
-  mutate(remove = ifelse(species == "Siphonaria" & limpets != "con", TRUE, FALSE)) %>% 
+  mutate(remove = ifelse(species == "Siphonaria" & herbivores != "con", TRUE, FALSE)) %>% 
   filter(remove == FALSE) %>% 
   dplyr::select(-percent_cover, -remove) %>% 
   # we need a column for unique plot identifiers for modeling temporal autocorrelation later
@@ -33,18 +33,16 @@ herbivores <- read_csv("./clean_data/bio_responses.csv") %>%
 
 # read in shell length data for each species measured from photos
 shell_length <- read_csv("./raw_data/grazer_size_BP_PA.csv") %>% 
-  select(-limpets, -barnacles, -date) %>% 
-  mutate(sp = str_replace_all(sp, c("siphonaria" = "Siphonaria", 
+  select(-barnacles, -date) %>% 
+  mutate(species = str_replace_all(sp, c("siphonaria" = "Siphonaria", 
                                     "lsc" = "Littorina",
-                                    "ldig" = "Lottia"))) %>% 
-  rename(size_mm = size)
+                                    "ldig" = "Lottia")))
 
 
 # building models for relationship of shell length and dry weight for each species
-siph <- read_csv("./raw_data/siphonaria_dwsl_Tablado_SciMar_2001.csv") %>% 
-  rename(dw_mg = dw, sl_mm = sl)
+siph <- read_csv("./raw_data/siphonaria_dwsl_Tablado_SciMar_2001.csv")
 # these data are extracted from Toblado & Gappa 2001
-siph_dw_sl <- lm(log(dw_g) ~ log(sl_mm), data = siph)
+siph_dw_sl <- lm(log(dw_g) ~ log(size_mm), data = siph)
 summary(siph_dw_sl)
 
 # create a function from the output
@@ -52,18 +50,21 @@ siph_dw <- function(len) {
   log_dw = 2.8318*log(len) - 10.6002
 }
 
+#### Here follows the steps needed to get metadigitized data from North & Frank figures
+#### for Littorina and Lottia.
+
 # need to extract the data from existing figures
 #lott_litt <- metaDigitise("./raw_data", summary = FALSE) # select 2
 
 # littorine data from North 1954
 litt <- do.call(rbind, lott_litt$scatterplot[1]) %>% 
   # get length in terms of mm, not cm
-  mutate(sl_mm = x*10) %>% 
+  mutate(size_mm = x*10) %>% 
   rename(dw_g = y) %>% 
-  select(sl_mm,dw_g) %>% 
-  mutate(species = "littorina")
+  select(size_mm,dw_g) %>% 
+  mutate(species = "Littorina")
 
-litt_dw_sl <- lm(log(dw_g) ~ log(sl_mm), data = litt)
+litt_dw_sl <- lm(log(dw_g) ~ log(size_mm), data = litt)
 summary(litt_dw_sl)
 
 litt_dw <- function(len) {
@@ -73,11 +74,11 @@ litt_dw <- function(len) {
 # lottia data from Frank 1965
 lott <- do.call(rbind, lott_litt$scatterplot[2]) %>% 
  # convert length to mm, convert volume to dry weight 
-  mutate(sl_mm = x*10, dw_g = y*0.35) %>% 
-  select(sl_mm,dw_g) %>% 
-  mutate(species = "lottia")
+  mutate(size_mm = x*10, dw_g = y*0.35) %>% 
+  select(size_mm,dw_g) %>% 
+  mutate(species = "Lottia")
 
-lott_dw_sl <- lm(log(dw_g) ~ log(sl_mm), data = lott)
+lott_dw_sl <- lm(log(dw_g) ~ log(size_mm), data = lott)
 summary(lott_dw_sl)
 
 # create function from model outputs
@@ -89,6 +90,7 @@ grazers_BC <- litt %>%
   full_join(lott)
 
 #write_csv(grazers_BC, "./raw_data/littorina_lottia_dwsl_North_Frank.csv")
+### Note that these data are now all put together into a file in the raw data folder
 
 # now for biomass estimation
 set.seed(26)
@@ -97,7 +99,7 @@ herbivores$total_dw_g <- NA
 
 for (x in 1:length(herbivores$species)){
   # subset shell lengths of the appropriate species for sampling
-  sub <- subset(shell_length$size_mm, shell_length$sp == herbivores$species[x])
+  sub <- subset(shell_length$size_mm, shell_length$species == herbivores$species[x])
   # and sample this subset
   y <- sample(sub, size = herbivores$count[x], replace = TRUE)
   # if the species is siphonaria, perform the appropriate function on the sample
@@ -231,7 +233,7 @@ litt_abund <- herbivores %>%
   filter(species == "Littorina")
 
 # response data are negative binomial. Start with a full model.
-litt.abund.1 <- glmmTMB(count ~ barnacles*timediff*limpets
+litt.abund.1 <- glmmTMB(count ~ barnacles*timediff*herbivores
                        + (1|block),
                        data = litt_abund,
                        family = nbinom1)
@@ -246,7 +248,7 @@ plot(residuals(litt.abund.1)~ as.factor(litt_abund$barnacles))
 
 # dispersion is less a factor of time, and more a factor of barnacles. introduce a dispersion formula
 
-litt.abund.2 <- glmmTMB(count ~ barnacles*timediff*limpets
+litt.abund.2 <- glmmTMB(count ~ barnacles*timediff*herbivores
                         + (1|block),
                         data = litt_abund,
                         dispformula = ~barnacles,
@@ -258,7 +260,7 @@ testTemporalAutocorrelation(sim.res.3a)
 # adding a dispersion formula has solved the pattern in the residuals plot
 
 drop1(litt.abund.2, test = "Chisq") # drop the three-way interaction
-litt.abund.3 <- update(litt.abund.2, ~. -barnacles:timediff:limpets)
+litt.abund.3 <- update(litt.abund.2, ~. -barnacles:timediff:herbivores)
 drop1(litt.abund.3, test = "Chisq") # don't drop anything else
 
 summary(litt.abund.3)
@@ -289,6 +291,16 @@ Anova(siph.abund.1)
 
 # script for creating figures for herbivory responses
 
+# most common plotting theme:
+
+text_resized <-   theme_classic() +
+  theme(axis.text.x = element_text(size = 16)) +
+  theme(axis.text.y = element_text(size = 16)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(axis.title.y = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 16)) +
+  theme(legend.title = element_text(size = 18))
+  
 # herbivore biomass by location and barnacle treatment (limpet control plots only)
 herb_summary <- read_csv("./clean_data/herbivore_biomass.csv") %>% 
   group_by(location, barnacles, timediff) %>% 
@@ -308,21 +320,14 @@ herbs <- ggplot(aes(x = timediff, y = av_bi, shape = Treatment,
                     color = Treatment), 
                 data = herb_summary) +
   geom_point(size = 3) +
-  theme_classic() +
   geom_line(aes(lty = Treatment), size = 1) +
-  ylab("Herbivore biomass (g dry tissue)") +
-  xlab("Time (weeks)") +
+  labs(y = "Herbivore biomass (g dry tissue)", x = "Time (weeks)") +
   scale_shape_manual(values = c(16,1,16,1)) +
   scale_linetype_manual(values = c(1,6,1,6))+
   scale_colour_manual(values = c("steelblue3", "steelblue3","indianred3", "indianred3")) +
-  theme(axis.text.x = element_text(size = 16)) +
-  theme(axis.text.y = element_text(size = 16)) +
-  theme(axis.title.x = element_text(size = 18)) +
-  theme(axis.title.y = element_text(size = 18)) +
-  theme(legend.text = element_text(size = 16)) +
-  theme(legend.title = element_text(size = 18)) +
   theme(legend.position = "top") +
-  geom_errorbar(aes(ymin = av_bi - se_bi, ymax = av_bi + se_bi), width = 1.5)
+  geom_errorbar(aes(ymin = av_bi - se_bi, ymax = av_bi + se_bi), width = 1.5) +
+  text_resized
 herbs
 
 #ggsave("./figures/Figure_2c.tiff", plot = herbs, 
@@ -333,18 +338,17 @@ herbs
 
 litt_summ <- read_csv("./clean_data/herbivore_abundance.csv") %>% 
   filter(species == "Littorina") %>% 
-  group_by(barnacles, limpets, timediff) %>% 
+  group_by(barnacles, herbivores, timediff) %>% 
   summarize(av_ab = mean(count), se_ab = se(count)) %>% 
-  rename("Barnacles" = barnacles) %>% 
-  mutate(Barnacles = str_replace_all(Barnacles, c("no" = "-B",
+  mutate(Barnacles = str_replace_all(barnacles, c("no" = "-B",
                                                   "yes" = "+B")),
-         limpets = str_replace_all(limpets, c("con" = "Control",
+         herbivores = str_replace_all(herbivores, c("con" = "Control",
                                               "in" = "Inclusion",
                                               "out" = "Exclusion"))) %>% 
-  mutate(limpets = factor(limpets, levels = c("Control","Inclusion","Exclusion")))
+  mutate(herbivores = factor(herbivores, levels = c("Control","Inclusion","Exclusion")))
 
 labels.litt <- data.frame(label = c("Control", "Inclusion", "Exclusion"),
-                          limpets = as.factor(c("Control", "Inclusion", "Exclusion")))
+                          herbivores = as.factor(c("Control", "Inclusion", "Exclusion")))
 
 
 litt_plot <- ggplot(aes(x = timediff, y = av_ab), 
@@ -353,8 +357,7 @@ litt_plot <- ggplot(aes(x = timediff, y = av_ab),
   geom_line(colour = "steelblue3", aes(lty = Barnacles)) +
   theme_classic() +
   scale_linetype_manual(values = c(6,1)) +
-  ylab(expression("Abundance of"~italic("Littorina")~ "spp.")) +
-  xlab("Time (weeks)") +
+  labs(y = expression("Abundance of"~italic("Littorina")~ "spp."), x = "Time (weeks)") +
   scale_shape_manual(values = c(1,16)) +
   theme(axis.text.x = element_text(size = 18), axis.text.y = element_text(size = 18)) +
   theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20)) +
@@ -362,7 +365,7 @@ litt_plot <- ggplot(aes(x = timediff, y = av_ab),
   theme(legend.title = element_text(size = 20)) +
   theme(plot.title = element_text(size = 20, hjust = 0.5)) +
   theme(strip.text.y = element_text(size = 18)) +
-  facet_wrap(~limpets, nrow = 3, scales = "free_x") +
+  facet_wrap(~herbivores, nrow = 3, scales = "free_x") +
   theme(strip.text = element_blank(), strip.background = element_blank()) +
   geom_errorbar(aes(ymin = av_ab - se_ab, ymax = av_ab + se_ab), colour = "steelblue3", width = 1.5) +
   geom_text(aes(x = 45, y = 25, label = label), data = labels.litt, size = 7,
@@ -373,14 +376,13 @@ litt_plot
        #width = 6.5, height = 5, units = "in",
        #dpi = 600)
 
-# limpets and "limpets", control treatment only
+# herbivores, control treatment only
 
 limpet_summ <- read_csv("./clean_data/herbivore_abundance.csv") %>% 
   filter(species == "Lottia" | species == "Siphonaria") %>% 
   group_by(barnacles, location, species, timediff) %>% 
   summarize(av_ab = mean(count), se_ab = se(count)) %>% 
-  rename("Barnacles" = barnacles) %>%  
-  mutate(Barnacles = str_replace_all(Barnacles, c("no" = "-B",
+  mutate(Barnacles = str_replace_all(barnacles, c("no" = "-B",
                                                   "yes" = "+B")),
          Treatment = paste(Barnacles, location))
 
@@ -397,8 +399,7 @@ limpet_plot <- ggplot(aes(x = timediff, y = av_ab, colour = Treatment, shape = T
   scale_linetype_manual(values = c(1,6,1,6)) +
   scale_colour_manual(values = c("indianred3", "indianred3", "steelblue3", "steelblue3")) +
   theme_classic() +
-  ylab(expression("Abundance of"~italic("Lottia")~"spp./"~italic("S. lessonii"))) +
-  xlab("Time (weeks)") +
+  labs(y = expression("Abundance of"~italic("Lottia")~"spp./"~italic("S. lessonii")), x = "Time (weeks)") +
   theme(axis.text.x = element_text(size = 18)) +
   theme(axis.text.y = element_text(size = 18)) +
   theme(axis.title.x = element_text(size = 20)) +
@@ -419,13 +420,7 @@ limpet_plot
 siph_shell <- ggplot(aes(x = size_mm), data = shell_length %>% filter(sp == "Siphonaria")) +
   geom_histogram(fill = "grey50", col = "black", binwidth = 1) +
   labs(x = "Shell length (mm)", y = "Frequency") +
-  theme_classic() +
-  theme(axis.text.x = element_text(size = 16)) +
-  theme(axis.text.y = element_text(size = 16)) +
-  theme(axis.title.x = element_text(size = 18)) +
-  theme(axis.title.y = element_text(size = 18)) +
-  theme(legend.text = element_text(size = 16)) +
-  theme(legend.title = element_text(size = 18)) +
+  text_resized +
   xlim(c(0,20))
 siph_shell
 #ggsave(plot = siph_shell, "./figures/siph_dist.tiff", units = "in",
@@ -436,16 +431,12 @@ siph_shell
 dw_sl_relationship <- ggplot(aes(x = log(sl_mm), y = log(dw_g)), data = siph) +
   geom_smooth(method = "lm") +
   geom_point(size = 2) +
-  labs(x = "Log [shell length (mm)]", y = "Log [dry tissue weight (g)]") +theme_classic() +
-  theme(axis.text.x = element_text(size = 16)) +
-  theme(axis.text.y = element_text(size = 16)) +
-  theme(axis.title.x = element_text(size = 18)) +
-  theme(axis.title.y = element_text(size = 18)) +
-  theme(legend.text = element_text(size = 16)) +
-  theme(legend.title = element_text(size = 18))
+  labs(x = "Ln [shell length (mm)]", y = "Ln [dry tissue weight (g)]") +theme_classic() +
+  text_resized
 dw_sl_relationship
-ggsave(plot = dw_sl_relationship, "./figures/relationship.tiff", units = "in",
-width = 4, height = 4, dpi = 600)
+
+#ggsave(plot = dw_sl_relationship, "./figures/relationship.tiff", units = "in",
+#width = 4, height = 4, dpi = 600)
 
 # Figure S6: Siphonaria recruitment & model (?)
 
@@ -454,26 +445,25 @@ siph_recruits <- read_csv("./clean_data/bio_responses.csv") %>%
   select(-percent_cover)
 
 siph_rec_summary <- siph_recruits %>% 
-  group_by(barnacles, limpets, timediff) %>% 
+  group_by(barnacles, herbivores, timediff) %>% 
   summarize(av_ab = mean(count), se_ab = se(count)) %>% 
   rename("Barnacles" = barnacles) %>% 
   mutate(Barnacles = str_replace_all(Barnacles, c("no" = "-B",
                                                   "yes" = "+B")),
-         limpets = str_replace_all(limpets, c("con" = "Control",
+         herbivores = str_replace_all(herbivores, c("con" = "Control",
                                               "in" = "Inclusion",
                                               "out" = "Exclusion"))) %>% 
-  mutate(limpets = factor(limpets, levels = c("Control","Inclusion","Exclusion")))
+  mutate(herbivores = factor(herbivores, levels = c("Control","Inclusion","Exclusion")))
 
 labels.siph <- data.frame(label = c("Control", "Inclusion", "Exclusion"),
-                          limpets = as.factor(c("Control", "Inclusion", "Exclusion")))
+                          herbivores = as.factor(c("Control", "Inclusion", "Exclusion")))
 
 siph_rec_plot <- ggplot(aes(x = timediff, y = av_ab), data = siph_rec_summary) +
   geom_point(size = 3, colour = "indianred3", aes(shape = Barnacles)) +
   geom_line(colour = "indianred3", aes(lty = Barnacles)) +
   theme_classic() +
   scale_linetype_manual(values = c(6,1)) +
-  ylab(expression("Abundance of"~italic("Siphonaria lessonii")~ "recruits")) +
-  xlab("Time (weeks)") +
+  labs(y = expression("Abundance of"~italic("Siphonaria lessonii")~ "recruits"), x = "Time (weeks)") +
   scale_shape_manual(values = c(1,16)) +
   theme(axis.text.x = element_text(size = 14)) +
   theme(axis.text.y = element_text(size = 14)) +
@@ -484,11 +474,10 @@ siph_rec_plot <- ggplot(aes(x = timediff, y = av_ab), data = siph_rec_summary) +
   theme(plot.title = element_text(size = 16, hjust = 0.5)) +
   theme(strip.text.y = element_text(size = 14)) +
   theme(panel.spacing = unit(1.2, "lines")) +
-  facet_wrap(~limpets, nrow = 3, scales = "free_x", strip.position = "right") +
+  facet_wrap(~herbivores, nrow = 3, scales = "free_x", strip.position = "right") +
   geom_errorbar(aes(ymin = av_ab - se_ab, ymax = av_ab + se_ab), colour = "indianred3", width = 1.5)
   
 siph_rec_plot
 
-ggsave("./figures/Figure_S7.tiff", plot = siph_rec_plot, 
-width = 6.5, height = 5, units = "in",
-dpi = 600)
+#ggsave("./figures/Figure_S7.tiff", plot = siph_rec_plot, 
+#width = 6.5, height = 5, units = "in", dpi = 600)

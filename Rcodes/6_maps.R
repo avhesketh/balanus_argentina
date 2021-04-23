@@ -1,4 +1,4 @@
-## creating maps
+## creating maps for Figure S1 in Supplement 1
 
 require(ggplot2)
 require(ggmap)
@@ -17,7 +17,7 @@ require(dismo)
 library(ggmap)
 library(ggsn)
 
-register_google(key = "AIzaSyDXb9xA_MSl7GzYF5Vcl9sedNZrawnNX1Q")
+## need valid Google key here to extract stamen map data
 
 lat_bc <- c(48.5,52) 
 long_bc <- c(-126,-123)
@@ -42,7 +42,6 @@ map_bp_inset <- ggmap(bc_inset_base) +
   theme(axis.text.y = element_text(size = 20)) +
   theme(panel.border = element_rect(fill = NA, colour= "black", size = 2))
 map_bp_inset
-
 
 base_bc_large <- get_map(location=c(-122.5,51), zoom=5,
                          source = "stamen", maptype = "terrain-background")
@@ -71,12 +70,12 @@ map_bp_large <- ggmap(base_bc_large) +
   theme(axis.title.y = element_text(size = 12)) +
   theme(panel.border = element_rect(fill = NA, colour= "black", size = 1))
 
-tiff("S1.tiff", units = "in", width = 3, height = 3, res = 600)
-map_bp_large
 north2(map_bp_large, y = 0.9, x = 0.3, symbol = 10)
 dev.off()
 
+tiff("figures/S1a.tiff", units = "in", width = 3, height = 3, res = 600)
 
+map_bp_large
 
 base_arg_large <- get_map(location = c(-63.5, -47), zoom = 5,
                           source = "stamen", maptype = "terrain-background")
@@ -101,12 +100,12 @@ map_arg_large <- ggmap(base_arg_large) +
   theme(axis.title.x = element_text(size = 12)) +
   theme(axis.title.y = element_text(size = 12)) +
   theme(panel.border = element_rect(fill = NA, colour= "black", size = 1))
-map_arg_large
 
-tiff("./figures/S1b.tiff", units = "in", width = 3, height = 3, res = 600)
-map_arg_large
 north2(map_arg_large, y = 0.9, x = 0.3, symbol = 10)
 dev.off()
+
+tiff("./figures/S1b.tiff", units = "in", width = 3, height = 3, res = 600)
+
 
 base_arg_inset <- get_map(location = c(-64.95, -42.7), zoom = 11,
                           source = "stamen", maptype = "terrain-background")
@@ -125,3 +124,4 @@ map_arg_inset <- ggmap(base_arg_inset) +
   theme(axis.text.y = element_text(margin = margin(l = 20, r = -50), size = 20)) +
   theme(axis.text.x = element_text(vjust = 8, size = 20))
 map_arg_inset
+

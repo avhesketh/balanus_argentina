@@ -17,13 +17,12 @@ se <- function(x){
 
 ephemerals <- read_csv("./clean_data/bio_responses.csv", col_types=
                          cols("D", "f", "f", "f", "f", "f", "n", "n", "f", "n")) %>% 
-  mutate(species = str_replace_all(species, c("Ephemeral Algae" = "Ephemerals"))) %>% 
   filter(species == "Ephemerals") %>% 
   # note that argentina data should be missing initial time points because of treatment artifact
   mutate(remove = if_else(location == "PA" & timediff == 0, TRUE, FALSE)) %>%
   filter(remove == FALSE) %>% 
   select(-remove) %>% 
-  mutate(limpets = factor(limpets, levels = c("con","in","out")),
+  mutate(herbivores = factor(herbivores, levels = c("con","in","out")),
           barnacles = factor(barnacles, levels = c("no","yes")))
 
 # keep only three timepoints for each site: fall and spring equinoxes
@@ -41,7 +40,7 @@ ephemerals_eq<- eph_bc_keep %>%
 
 # Model 5: ephemeral cover
 
-eph.cover.1 <- glmmTMB(percent_cover ~ (limpets + barnacles + location + timediff)^2
+eph.cover.1 <- glmmTMB(percent_cover ~ (herbivores + barnacles + location + timediff)^2
                              + (1|block/location),
                       data = ephemerals_eq,
                       family = tweedie())
@@ -71,7 +70,7 @@ Anova(eph.cover.2)
 perennials <- read_csv("./clean_data/bio_responses.csv", col_types=
   cols("D", "f", "f", "f", "f", "f", "n", "n", "f", "n")) %>% 
   filter(species == "Perennials") %>% 
-  mutate(limpets = factor(limpets, levels = c("con","in","out")))
+  mutate(herbivores = factor(herbivores, levels = c("con","in","out")))
 
 
 # need to subset dates because the data are overly complex and non-linear with respect to time
@@ -87,7 +86,7 @@ perennials_eq <- per_arg_keep %>%
   full_join(per_bc_keep)  %>% 
   mutate(barnacles = factor(barnacles, c("no","yes")))
 
-per.cover.1 <- glmmTMB(percent_cover ~ (timediff + barnacles + location + limpets)^3
+per.cover.1 <- glmmTMB(percent_cover ~ (timediff + barnacles + location + herbivores)^3
                         ,
                        dispformula = ~location,
                       family = tweedie(),
@@ -101,7 +100,7 @@ testTemporalAutocorrelation(sim.res.6)
 
 # logit transform and work with gaussian distribution
 
-per.cover.2 <- glmmTMB(logit(percent_cover) ~ (timediff + barnacles + location + limpets)^3
+per.cover.2 <- glmmTMB(logit(percent_cover) ~ (timediff + barnacles + location + herbivores)^3
                        + (1|block/location),
                        # add in dispersion formula based on residuals plots
                        dispformula = ~location*barnacles,
@@ -115,15 +114,15 @@ testTemporalAutocorrelation(sim.res.6a)
 
 # iteratively drop terms to minimize AIC
 drop1(per.cover.2, test="Chisq")
-per.cover.3 <- update(per.cover.2, ~. -barnacles:location:limpets)
+per.cover.3 <- update(per.cover.2, ~. -barnacles:location:herbivores)
 drop1(per.cover.3, test = "Chisq")
-per.cover.4 <- update(per.cover.3, ~. -timediff:location:limpets)
+per.cover.4 <- update(per.cover.3, ~. -timediff:location:herbivores)
 drop1(per.cover.4, test = "Chisq")
-per.cover.5 <- update(per.cover.4, ~. - timediff:barnacles:limpets)
+per.cover.5 <- update(per.cover.4, ~. - timediff:barnacles:herbivores)
 drop1(per.cover.5, test = "Chisq")
-per.cover.6 <- update(per.cover.5, ~. -barnacles:limpets)
+per.cover.6 <- update(per.cover.5, ~. -barnacles:herbivores)
 drop1(per.cover.6, test = "Chisq")
-per.cover.7 <- update(per.cover.6, ~. -timediff:limpets)
+per.cover.7 <- update(per.cover.6, ~. -timediff:herbivores)
 drop1(per.cover.7, test = "Chisq")
 # finished dropping terms
 
@@ -139,7 +138,7 @@ Anova(per.cover.7)
 
 fucus <- read_csv("./clean_data/fucus_clean.csv")
 
-fuc.cover.1 <- glmmTMB(percent_cover ~(barnacles+limpets+timediff)^3
+fuc.cover.1 <- glmmTMB(percent_cover ~(barnacles+herbivores+timediff)^3
                       + (1|block),
                       fucus, family = tweedie())
 
@@ -157,18 +156,29 @@ Anova(fuc.cover.1)
 
 # FIGURES
 
+# main plotting theme:
+
+algae_theme <- theme_classic + 
+  theme(axis.text.x = element_text(size = 14)) +
+  theme(axis.text.y = element_text(size = 14)) +
+  theme(axis.title.x = element_text(size = 16)) +
+  theme(axis.title.y = element_text(size = 16)) +
+  theme(legend.text = element_text(size = 14)) +
+  theme(legend.title = element_text(size = 16)) +
+  theme(strip.text.y = element_text(size = 14)) +
+
 # ephemeral algae
 
 ealgae_summary <- ephemerals %>% 
-  group_by(location, barnacles, limpets, timediff) %>% 
+  group_by(location, barnacles, herbivores, timediff) %>% 
   summarize(av_cover = mean(percent_cover), se_cover = se(percent_cover)) %>%
   # rename treatments
-  mutate(limpets = str_replace_all(limpets, c("con" = "Control",
+  mutate(herbivores = str_replace_all(herbivores, c("con" = "Control",
                                               "in" = "Inclusion",
                                               "out" = "Exclusion")),
          barnacles = str_replace_all(barnacles, c("no" = "-B",
                                                   "yes" = "+B")),
-         limpets = factor(limpets, levels = c("Control","Inclusion","Exclusion")),
+         herbivores = factor(herbivores, levels = c("Control","Inclusion","Exclusion")),
         Treatment = paste(barnacles, location))
 
 # separate analysed data from nonanalysed to make visual distinction
@@ -195,7 +205,7 @@ df.eph <- data.frame( values = c("BP","-B","Control",0,5,0,"dummy"), names  = co
 ealgae_summary <- ealgae_summary %>% 
   full_join(df.eph) %>% 
   mutate(Treatment = factor(Treatment, levels = c("+B PA","-B PA","+B BP","-B BP","dummy")),
-         limpets = factor(limpets, levels = c("Control","Inclusion","Exclusion")))
+         herbivores = factor(herbivores, levels = c("Control","Inclusion","Exclusion")))
 
 ealgae <- ggplot(aes(x = timediff, y = av_cover, shape = Treatment, color = Treatment), 
                  data = ealgae_nonan) +
@@ -204,21 +214,13 @@ ealgae <- ggplot(aes(x = timediff, y = av_cover, shape = Treatment, color = Trea
   geom_point(size = 3, data = ealgae_analysed) +
   scale_shape_manual(values = c(16,1,16,1, 2)) +
   scale_linetype_manual(values = c(1,6,1,6, 2))+
-  theme_classic() +
   scale_colour_manual(values = c("indianred3", "indianred3", "steelblue3", "steelblue3", "white")) +
-  ylab("Ephemeral algal cover (%)") +
-  xlab("Time (weeks)") +
+  labs(y = "Ephemeral algal cover (%)", x = "Time (weeks)") +
   xlim(c(0,63)) +
-  theme(axis.text.x = element_text(size = 14)) +
-  theme(axis.text.y = element_text(size = 14)) +
-  theme(axis.title.x = element_text(size = 16)) +
-  theme(axis.title.y = element_text(size = 16)) +
-  theme(legend.text = element_text(size = 14)) +
-  theme(legend.title = element_text(size = 16)) +
-  theme(strip.text.y = element_text(size = 14)) +
+  algae_theme +
   theme(panel.spacing = unit(1.2, "lines")) +
   scale_y_continuous(breaks = c(0,5,10,20,30,40,50,60,70,80)) +
-  facet_wrap(~limpets, scales = "free", strip.position = "right", nrow = 3)+
+  facet_wrap(~herbivores, scales = "free", strip.position = "right", nrow = 3)+
   geom_errorbar(colour = "grey80", aes(ymin = av_cover - se_cover, ymax = av_cover + se_cover), width = 1.5) +
   geom_errorbar(aes(ymin = av_cover - se_cover, ymax = av_cover + se_cover), data = ealgae_analysed, width = 1.5) 
 ealgae
@@ -234,19 +236,19 @@ eph.scaled
 #width = 6, height = 8, units = "in", compression = "lzw",
 #dpi = 800)
 
-# perennial algae - all
+# Perennial algae
 
 palgae_summary <- perennials %>%
   mutate(logit_pc = car::logit(percent_cover)) %>% 
-  group_by(location, barnacles, timediff, limpets) %>% 
+  group_by(location, barnacles, timediff, herbivores) %>% 
   summarize(log_av_cover = mean(logit_pc), log_se_cover = se(logit_pc),
             av_cover = mean(percent_cover), se_cover = se(percent_cover)) %>% 
-  mutate(limpets = str_replace_all(limpets, c("con" = "Control",
+  mutate(herbivores = str_replace_all(herbivores, c("con" = "Control",
                                               "in" = "Inclusion",
                                               "out" = "Exclusion")),
          barnacles = str_replace_all(barnacles, c("no"="-B",
                                                   "yes"="+B")),
-         limpets = factor(limpets, levels = c("Control","Inclusion","Exclusion")),
+         herbivores = factor(herbivores, levels = c("Control","Inclusion","Exclusion")),
          Treatment = paste(barnacles, location))
 
 palgae_summary$Treatment <- factor(palgae_summary$Treatment, 
@@ -265,60 +267,20 @@ palgae_analysed <- palgae_summary %>%
 palgae_nonan <- palgae_summary %>% 
   anti_join(palgae_analysed)
 
-lpalgae <- ggplot(aes(x = timediff, y = log_av_cover, shape = Treatment,
-                      color = Treatment), 
-                  data = palgae_nonan) +
-  geom_line(aes(lty=Treatment), data = palgae_summary) +
-  geom_point(size = 3, colour = "grey80") +
-  geom_point(size = 3, data = palgae_analysed) +
-  theme_classic() +
-  scale_colour_manual(values = c("indianred3", "indianred3", "steelblue3", "steelblue3")) +
-  ylab("Logit [Perennial algal cover (%)]") +
-  xlab("Time (weeks)") +
-  xlim(c(0,70)) +
-  scale_shape_manual(values = c(16,1,16,1)) +
-  scale_linetype_manual(values = c(1,6,1,6))+
-  facet_wrap(~limpets, nrow = 3, strip.position = "right", scales = "free_x") +
-  theme(axis.text.x = element_text(size = 14)) +
-  theme(axis.text.y = element_text(size = 14)) +
-  theme(axis.title.x = element_text(size = 16)) +
-  theme(axis.title.y = element_text(size = 16)) +
-  theme(legend.text = element_text(size = 14)) +
-  theme(legend.title = element_text(size = 16)) +
-  theme(strip.text.y = element_text(size = 14)) +
-  theme(panel.spacing = unit(1.2, "lines")) +
-  geom_errorbar(colour = "grey80", aes(ymin = log_av_cover - log_se_cover
-                                       , ymax = log_av_cover + log_se_cover), width = 1.5) +
-  geom_errorbar(aes(ymin = log_av_cover - log_se_cover, 
-                    ymax = log_av_cover + log_se_cover), data = palgae_analysed, width = 1.5) 
-lpalgae
-
-#ggsave("./figures/Figure_S1_S3.tiff", plot = lpalgae, 
-       #width = 7, height = 5, units = "in",
-       #dpi = 600)
-
 palgae <- ggplot(aes(x = timediff, y = av_cover, shape = Treatment,
                      color = Treatment), 
                  data = palgae_nonan) +
   geom_line(aes(lty=Treatment), data = palgae_summary) +
   geom_point(size = 3, colour = "grey80") +
   geom_point(size = 3, data = palgae_analysed) +
-  theme_classic() +
   scale_colour_manual(values = c("indianred3", "indianred3", "steelblue3", "steelblue3")) +
-  ylab("Perennial algal cover (%)") +
-  xlab("Time (weeks)") +
+  labs(y = "Perennial algal cover (%)", x = "Time (weeks)") +
   xlim(c(0,63)) +
   ylim(c(0,100)) +
   scale_shape_manual(values = c(16,1,16,1)) +
   scale_linetype_manual(values = c(1,6,1,6))+
-  facet_wrap(~limpets, nrow = 3, strip.position = "right", scales = "free_x") +
-  theme(axis.text.x = element_text(size = 14)) +
-  theme(axis.text.y = element_text(size = 14)) +
-  theme(axis.title.x = element_text(size = 16)) +
-  theme(axis.title.y = element_text(size = 16)) +
-  theme(legend.text = element_text(size = 14)) +
-  theme(legend.title = element_text(size = 16)) +
-  theme(strip.text.y = element_text(size = 14)) +
+  facet_wrap(~herbivores, nrow = 3, strip.position = "right", scales = "free_x") +
+  algae_theme +
   theme(panel.spacing = unit(1.2, "lines")) +
   geom_errorbar(colour = "grey80", aes(ymin = av_cover - se_cover
                                        , ymax = av_cover + se_cover), width = 1.5) +
@@ -330,18 +292,44 @@ palgae
 #width = 6, height = 8, units = "in", compression = "lzw",
 #dpi = 800)
 
+# Figure S5
+
+lpalgae <- ggplot(aes(x = timediff, y = log_av_cover, shape = Treatment,
+                      color = Treatment), 
+                  data = palgae_nonan) +
+  geom_line(aes(lty=Treatment), data = palgae_summary) +
+  geom_point(size = 3, colour = "grey80") +
+  geom_point(size = 3, data = palgae_analysed) +
+  scale_colour_manual(values = c("indianred3", "indianred3", "steelblue3", "steelblue3")) +
+  labs(y = "Logit [Perennial algal cover (%)]", x = "Time (weeks)") +
+  xlim(c(0,70)) +
+  scale_shape_manual(values = c(16,1,16,1)) +
+  scale_linetype_manual(values = c(1,6,1,6))+
+  facet_wrap(~herbivores, nrow = 3, strip.position = "right", scales = "free_x") +
+  algae_theme +
+  theme(panel.spacing = unit(1.2, "lines")) +
+  geom_errorbar(colour = "grey80", aes(ymin = log_av_cover - log_se_cover
+                                       , ymax = log_av_cover + log_se_cover), width = 1.5) +
+  geom_errorbar(aes(ymin = log_av_cover - log_se_cover, 
+                    ymax = log_av_cover + log_se_cover), data = palgae_analysed, width = 1.5) 
+lpalgae
+
+#ggsave("./figures/Figure_S5.tiff", plot = lpalgae, 
+#width = 7, height = 5, units = "in",
+#dpi = 600)
+
 # fucus at BP
 glimpse(fucus)
 fucus_summ <- fucus %>% 
-  group_by(barnacles, limpets, timediff) %>% 
+  group_by(barnacles, herbivores, timediff) %>% 
   summarize(av_cover = mean(percent_cover), se_cover = sd(percent_cover)/sqrt(length(percent_cover))) %>% 
-  mutate(limpets = str_replace_all(limpets, c("con" = "Control",
+  mutate(herbivores = str_replace_all(herbivores, c("con" = "Control",
                                                       "in" = "Inclusion",
                                                       "out" = "Exclusion")),
          barnacles = str_replace_all(barnacles, c("no"="-B",
                                                   "yes"="+B")))
 
-fucus_summ$limpets <- factor(fucus_summ$limpets, levels = c("Control", "Inclusion", "Exclusion"))
+fucus_summ$herbivores <- factor(fucus_summ$herbivores, levels = c("Control", "Inclusion", "Exclusion"))
 
 fucus_summ$Barnacles <- factor(fucus_summ$barnacles,
                                levels = c("+B","-B"))
@@ -351,23 +339,15 @@ fucus_plot <- ggplot(aes(x = timediff, y = av_cover, shape = Barnacles),
   geom_point(size = 3, colour = "steelblue3") +
   geom_line(aes(lty = Barnacles), colour = "steelblue3") +
   scale_linetype_manual(values = c(1,6)) +
-  theme_classic() +
-  ylab(expression(~italic("Fucus distichus")~ "cover (%)")) +
-  xlab("Time (weeks)") +
+  labs(x = "Time (weeks)", y = expression(~italic("Fucus distichus")~ "cover (%)")) +
   scale_shape_manual(values = c(16,1)) +
-  theme(axis.text.x = element_text(size = 14)) +
-  theme(axis.text.y = element_text(size = 14)) +
-  theme(axis.title.x = element_text(size = 16)) +
-  theme(axis.title.y = element_text(size = 16)) +
-  theme(legend.text = element_text(size = 14)) +
-  theme(legend.title = element_text(size = 16)) +
+  algae_theme +
   theme(plot.title = element_text(size = 16, hjust = 0.5)) +
-  theme(strip.text.y = element_text(size = 14)) +
-  facet_wrap(~limpets, nrow = 3, strip.position = "right", scales = "free_x") +
+  facet_wrap(~herbivores, nrow = 3, strip.position = "right", scales = "free_x") +
   geom_errorbar(aes(ymin = av_cover - se_cover, ymax = av_cover + se_cover), 
                 width = 1.5, colour = "steelblue3")
 fucus_plot
 
-#ggsave("./figures/Figure_S1_S4.tiff", plot = fucus_plot,
+#ggsave("./figures/Figure_S6.tiff", plot = fucus_plot,
       #width = 7, height = 5, units = "in",
       #dpi = 600)
