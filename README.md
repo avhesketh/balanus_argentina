@@ -1,4 +1,4 @@
-# Species traits and evironmental context determine how a non-native facilitator affects an invaded community
+# Ecological and evironmental context shape the differential effects of a facilitator in its native and invaded ranges
 
 ## Abstract
 
