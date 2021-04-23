@@ -1,0 +1,49 @@
+attributeName,attributeDefinition,formatString,unit,numberType
+date,date of data recording,YYYY-MM-DD,dimensionless,NA
+block,experimental block (character/factor),NA,dimensionless,NA
+barnacles,barnacle treatment (character/factor),NA,dimensionless,NA
+limpets,herbivore treatment (character/factor),NA,dimensionless,NA
+plot,unique experimental plot identifier from each location. Range 0-36 (integer),NA,dimensionless,integer
+Bgrec,abundance of Balanus glandula barnacle recruits (integer),NA,dimensionless,integer
+Cdrec,abundance of Chthamalus dalli barnacle recruits (integer),NA,dimensionless,integer
+Lot,abundance of Lottia spp. limpets initially observed (integer),NA,dimensionless,integer
+Lot_plus_added,abundance of Lottia spp. limpets after treatment corrections (integer),NA,dimensionless,integer
+Lit,abundance of Littorina spp. (integer),NA,dimensionless,integer
+rawU,squares of 6x6 square quadrat with Ulva sp. ephemeral algae present. Range 0-36 (numeric),NA,dimensionless,real
+rawP,squares of 6x6 square quadrat with Pyropia sp. ephemeral algae present. Range 0-36 (numeric),NA,dimensionless,real
+raws,"squares of 6x6 square quadrat with scunge (diatoms, miscellaneous photosynthetic algae) ephemeral algae present. Range 0-36 (numeric)",NA,dimensionless,real
+rawperen,squares of 6x6 square quadrat with perennial algae present. Range 0-36 (numeric),NA,dimensionless,real
+fucus_raw,raw cover of Fucus distichus perennial algae (numeric),NA,squareCentimeters,real
+%U,percent cover of Ulva sp. ephemeral algae. Range 0-100 (numeric),NA,percent,real
+%P,percent cover of Pyropia sp. ephemeral algae. Range 0-100 (numeric),NA,percent,real
+%s,percent cover of scunge ephemeral algae. Range 0-100 (numeric),NA,percent,real
+%ephem,percent cover of ephemeral algae. Range 0-100 (numeric),NA,percent,real
+%peren,percent cover of perennial algae. Range 0-100 (numeric),NA,percent,real
+fucus_cover,proportion cover of Fucus distichus perennial algae. Range 0-1 (numeric),NA,dimensionless,real
+note,experimental notes related to each plot and timepoint (character),NA,dimensionless,NA
+Dens Siph,abundance of Siphonaria lessonii pulmonate limpet recruits (integer),NA,dimensionless,integer
+mussels,abundance of mussels (integer),NA,dimensionless,integer
+cover Ralfsia sp.,percent cover of Ralfsia sp. perennial algae. Range 0-100 (numeric),NA,percent,real
+cover Blindigia,percent cover of Blindigia minima ephemeral algae. Range 0-100 (numeric),NA,percent,real
+cover Porphyra,percent cover of Porphyra sp. ephemeral algae. Range 0-100 (numeric),NA,percent,real
+polysiphonia,percent cover of Polysiphonia sp. (?) ephemeral algae. Range 0-100 (numeric),NA,percent,real
+Tegula,abundance of Tegula sp. gastropods (integer),NA,dimensionless,integer
+Month,year and month of Siphonaria abundance survey,YY-b,dimensionless,NA
+Dens Siphonaria,density of adult Siphonaria lessonii (integer),NA,dimensionless,integer
+sp,species of herbivore measured (character/factor),NA,dimensionless,NA
+size_mm,shell length or shell height of herbivore measured (numeric),NA,millimeter,real
+dw_mg,dry weight in mg (numeric),NA,milligram,real
+dw_g,dry weight in g (numeric),NA,gram,real
+year,year of measurement,YYYY,dimensionless,NA
+month,month of measurement,MM,dimensionless,NA
+humidity,relative humidity. Range 0-100 (numeric),NA,percent,real
+site,site of measurement (character/factor),NA,dimensionless,NA
+mean_temp,mean temperature (numeric),NA,celsius,real
+mean_max_temp,mean maximum daily temperature (numeric),NA,celsius,real
+mean_min_temp,mean minimum daily tempearture (numeric),NA,celsius,real
+max_temp,absolute maximum monthly temperature (numeric),NA,celsius,real
+min_temp,absolute minimum monthly temperature (numeric),NA,celsius,real
+date_ibutton,date of temperature measurement by iButton,MM/DD/YYYY,dimensionless,NA
+time_ibutton,time of temperature measurement by iButton,hh:mm:ss,dimensionless,NA
+number,number of iButton. Range 1-8 (integer),NA,dimensionless,integer
+temp,temperature measured by iButton (numeric),NA,celsius,real

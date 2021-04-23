@@ -31,9 +31,9 @@ Within the raw data folder, there are a number of data frames used for eventual 
 
 11) grazer_size_BP_PA.csv: the size (shell length for _Lottia digitalis_ and _Siphonaria lessonii_ and shell height for _Littorina scutulata_) of grazers estimated from photographs taken at each site at three different timepoints for use in approximating biomass in plots from abundance data.
 
-12) littorina_dwsl_North_1954.jpg: figure of the relationship between shell height and tissue weight of _Littorina scutulata_ ,taken from North 1954 for extracting data with metaDigitise to establish a relationship between log(shell height) and log(tissue weight).
+12) littorina_dwsl_North_1954.png: figure of the relationship between shell height and tissue weight of _Littorina scutulata_ ,taken from North 1954 for extracting data with metaDigitise to establish a relationship between log(shell height) and log(tissue weight).
 
-13) lottia_dwsl_Frank_1965.jpg: figure of the relationship between shell length and volume (which is easy related to dry weight) for _Lottia digitalis_, taken from Frank 1965 for extracting data with metaDigitise to establish a relationship between log(shell length) and log(tissue weight).
+13) lottia_dwsl_Frank_1965.png: figure of the relationship between shell length and volume (which is easy related to dry weight) for _Lottia digitalis_, taken from Frank 1965 for extracting data with metaDigitise to establish a relationship between log(shell length) and log(tissue weight).
 
 14) littorina_lottia_dwsl_North_Frank.csv: extracted data from figures 12 and 13.
 
@@ -43,6 +43,7 @@ Note that the 'caldat' folder contains objects created with the metaDigitise pac
 
 1) 1_biotic_tidying.R: tidying of raw data and conversion into a useable format (clean data outputs = bio_responses.csv, fucus_clean.csv)
 2) 2_abiotic.r: analysis and plotting of temperature and humidity data (clean data outputs = humidity_clean.csv, temperature_clean.csv, Figures 1a-1c)
-3) 3_herbivores.R: conversion of herbivore abundance to biomass estimates, analysis and plotting of these data (clean data outputs = herbivore_abundance.csv, herbivore_biomass.csv, Figures 2a-2c)
-4) 4_algae.R: analysis and plotting of ephemeral and perennial algal cover (Figures 3-4, A1_S1, A1_S2)
-5) 5_barnacles.R: analysis and plotting of barnacle recruitment data (Figures 5, A1_S3)
+3) 3_herbivores.R: conversion of herbivore abundance to biomass estimates, analysis and plotting of these data (clean data outputs = herbivore_abundance.csv, herbivore_biomass.csv, Figures 2a-2c, components of S3, S4)
+4) 4_algae.R: analysis and plotting of ephemeral and perennial algal cover (Figures 3-4, S5, S6)
+5) 5_barnacles.R: analysis and plotting of barnacle recruitment data (Figures 5, S7)
+6) 6_maps.R: code for generating maps (Figure S1)

@@ -1,0 +1,19 @@
+rootFolder,fileNames,fileDescriptors,outputs
+raw_data,community_BP_200707.csv,"Species counts & cover data for Bluestone Point, BC",
+raw_data,community_PA_200512.csv,"Species counts & cover data for Punta Ameghino, Patagonia - First timepoint only, no adult Siphonaria density",
+raw_data,community_PA_200602.csv,"Species counts & cover data for Punta Ameghino, Patagonia - Excluding adult Siphonaria density",
+raw_data,fucus_BP_200707.csv,"Cover of Fucus distichus at Bluestone Point, BC",
+raw_data,grazer_size_BP_PA.csv,"Size of Lottia digitalis and Littorina scutulata at Bluestone Point, BC as extracted from photos in ImageJ",
+raw_data,humidity_BP.csv,"Relative humidity from 2015-2020 at Bluestone Point, BC",
+raw_data,humidity_PA.csv,"Relative humidity from 2015-2020 at Punta Ameghino, Patagonia",
+raw_data,littorina_lottia_dwsl_North_Frank.csv,Relationships between dry weight and shell height/length for Lottia digitalis and Littorina scutulata as extracted from figures using metaDigitise,
+raw_data,siphonaria_dwsl_Tablado_SciMar_2001.csv,"Relationship between dry weight and shell length for Siphonaria lessonii in Patagonia as extracted from Tablado & Lopez Gappa, 2001",
+raw_data,siphonaria_PA_200702.csv,"Density of Siphonaria lessonii at Punta Ameghino, Patagonia during the entire study period",
+raw_data,temperature_BP_200609.csv,"iButton-logged temperatures at Bluestone Point, BC",
+raw_data,temperature_PA_200603.csv,"iButton-logged temperatures at Punta Ameghino, Patagonia",
+Rcodes,1_biotic_tidying.R,tidying of raw data and conversion into a useable format ,"bio_responses.csv, fucus_clean.csv"
+Rcodes,2_abiotic.R,analysis and plotting of temperature and humidity data ,"humidity_clean.csv, temperature_clean.csv, Figures 1a-1c"
+Rcodes,3_herbivores.R,"conversion of herbivore abundance to biomass estimates, analysis and plotting of these data","herbivore_abundance.csv, herbivore_biomass.csv, Figures 2a-2c, components of S3, S4"
+Rcodes,4_algae.R,analysis and plotting of ephemeral and perennial algal cover,"Figures 3-4, S5, S6"
+Rcodes,5_barnacles.R,analysis and plotting of barnacle recruitment data,"Figures 5, S7"
+Rcodes,6_maps.R,code for generating maps,Figure S1

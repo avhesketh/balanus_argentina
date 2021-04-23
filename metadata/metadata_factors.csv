@@ -1,0 +1,17 @@
+attributeName,code,definition
+block,A,block A
+block,B,block B
+block,C,block C
+block,D,block D
+block,E,block E
+block,F,block F
+barnacles,yes,intact barnacle bed
+barnacles,no,barnacles removed
+herbivores,con,unfenced control
+herbivores,in,inclusion treatment
+herbivores,out,exclusion treatment
+sp,lsc,Littorina scutulata
+sp,ldig,Lottia digitalis
+sp,siphonaria,Siphonaria lessonii
+site,BS,Barkley Sound
+site,NG,Nuevo Gulf
