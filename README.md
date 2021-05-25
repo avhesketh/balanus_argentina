@@ -1,4 +1,4 @@
-# Ecological and evironmental context shape the differential effects of a facilitator in its native and invaded ranges
+# Ecological and environmental context shape the differential effects of a facilitator in its native and invaded ranges
 
 ## Abstract
 
@@ -19,7 +19,7 @@ Within the raw data folder, there are a number of data frames used for eventual 
 
 5) temperature_PA_200603.csv: intertidal temperature data collected at Punta Ameghino from December 2005-March 2006
 
-6) community_BP_200707.csv: monitoring data collected at Bluestone Point collected at all timepoints
+6) community_BP_200707.csv: monitoring data collected at Bluestone Point at all timepoints
 
 7) temperature_BP_200609.csv: intertidal temperature data collected at Bluestone Point from June 2006-September 2006
 
