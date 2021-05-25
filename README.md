@@ -47,3 +47,7 @@ Note that the 'caldat' folder contains objects created with the metaDigitise pac
 4) 4_algae.R: analysis and plotting of ephemeral and perennial algal cover (Figures 3-4, S5, S6)
 5) 5_barnacles.R: analysis and plotting of barnacle recruitment data (Figures 5, S7)
 6) 6_maps.R: code for generating maps (Figure S1)
+
+## Description of variables
+
+Metadata, including a description of variables and their units of measurement, can be found under the 'metadata' folder in the file 'metadata_variables.csv'. Further descriptions of factors and their levels can be foundin 'metadata_factors.csv'. A description of files can be found (in addition to within this README) in 'metadata_files.csv'.
